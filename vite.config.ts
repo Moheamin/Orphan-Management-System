@@ -11,4 +11,12 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    watch: {
+      usePolling: true, // Try this if normal watching fails
+    },
+    hmr: {
+      overlay: true,
+    },
+  },
 });
