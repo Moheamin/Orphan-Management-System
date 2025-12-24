@@ -1,7 +1,6 @@
 import { Book, Moon } from "lucide-react";
 import Button from "../components/Button";
 import "../src/index.css";
-import { useState } from "react";
 
 function Header({
   isOpen,

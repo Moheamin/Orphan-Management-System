@@ -1,28 +1,25 @@
 import Card from "../components/Card";
-import { Heart } from "lucide-react";
-import MyIcon from "../components/MyIcon";
 export default function Cards() {
   return (
     <ul className=" mt-20 grid grid-cols-3 gap-8 mr-2">
       <Card>
-        <div>
-          <h2 className="text-gray-400">لكفالة العامة</h2>
-          <span className="text-lg"> 165 كفالة </span>
-          <p className="text-gray-400"> 145,000 دينار عراقي</p>
+        <div className="p-1 flex flex-col items-end text-right gap-2">
+          {" "}
+          <h2 className="text-lg">اجمالي الكفلاء</h2>
+          <p className="text-[var(--textMuted)]"> 189 كفيل نشط </p>
         </div>
       </Card>
       <Card>
-        <div>
-          <h2 className="text-gray-400">الكفالة العامة</h2>
-          <span className="text-lg"> 165 كفالة </span>
-          <p className="text-gray-400"> 145,000 دينار عراقي</p>
+        <div className="p-1 flex flex-col items-end text-right gap-2">
+          {" "}
+          <h2 className="text-lg">اجمالي الكفالات</h2>
+          <p className="text-[var(--textMuted)]">312 كفالة فعالة</p>
         </div>
       </Card>
       <Card>
-        <div>
-          <h2 className="text-gray-400">الكفالة العامة</h2>
-          <span className="text-lg"> 165 كفالة </span>
-          <p className="text-gray-400"> 145,000 دينار عراقي</p>
+        <div className="p-1 flex flex-col items-end text-right gap-2">
+          <h2 className="text-lg">اجمالي المساهمات</h2>
+          <p className="text-[var(--textMuted)]"> 500,000,000 دينار</p>
         </div>
       </Card>
     </ul>
