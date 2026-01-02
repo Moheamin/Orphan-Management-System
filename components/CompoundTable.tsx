@@ -1,7 +1,7 @@
-import { ReactNode, createContext, useContext, useState, useMemo } from "react";
+import { type ReactNode, createContext, useContext, useState } from "react";
 import { Search, X } from "lucide-react";
-import Button from "../components/Button";
-import LoadingSpinner from "../components/LoadingSpinner";
+import Button from "./Button";
+import LoadingSpinner from "./LoadingSpinner";
 
 // Context Types
 interface DataTableContextType {
@@ -11,18 +11,18 @@ interface DataTableContextType {
   setIsModalOpen: (open: boolean) => void;
   deleteConfirm: string | number | null;
   setDeleteConfirm: (id: string | number | null) => void;
+  editItem: any | null;
+  setEditItem: (item: any | null) => void;
 }
 
-const DataTableContext = createContext<DataTableContextType | undefined | null>(
-  null
+const DataTableContext = createContext<DataTableContextType | undefined>(
+  undefined
 );
 
-const useDataTableContext = (): DataTableContextType => {
+const useDataTableContext = () => {
   const context = useContext(DataTableContext);
   if (!context) {
-    throw new globalThis.Error(
-      "DataTable components must be used within DataTable.Root"
-    );
+    throw new Error("DataTable components must be used within DataTable.Root");
   }
   return context;
 };
@@ -40,6 +40,7 @@ function Root({ children, dir = "rtl", className = "" }: RootProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | number | null>(
     null
   );
+  const [editItem, setEditItem] = useState<any | null>(null);
 
   return (
     <DataTableContext.Provider
@@ -50,6 +51,8 @@ function Root({ children, dir = "rtl", className = "" }: RootProps) {
         setIsModalOpen,
         deleteConfirm,
         setDeleteConfirm,
+        editItem,
+        setEditItem,
       }}
     >
       <div
@@ -129,9 +132,10 @@ interface AddButtonProps {
 }
 
 function AddButton({ label, onClick, className = "" }: AddButtonProps) {
-  const { setIsModalOpen } = useDataTableContext();
+  const { setIsModalOpen, setEditItem } = useDataTableContext();
 
   const handleClick = () => {
+    setEditItem(null); // Clear edit item when adding new
     setIsModalOpen(true);
     onClick?.();
   };
@@ -153,11 +157,13 @@ function Loading() {
 }
 
 // Error Component
-interface ErrorProps {
+interface ErrorMessageProps {
   message?: string;
 }
 
-function Error({ message = "حدث خطأ في تحميل البيانات" }: ErrorProps) {
+function ErrorMessage({
+  message = "حدث خطأ في تحميل البيانات",
+}: ErrorMessageProps) {
   return (
     <div className="flex items-center justify-center p-8">
       <span className="text-red-600">{message}</span>
@@ -308,7 +314,7 @@ export const DataTable = {
   SearchInput,
   AddButton,
   Loading,
-  Error,
+  Error: ErrorMessage,
   Table,
   TableHead,
   TableBody,

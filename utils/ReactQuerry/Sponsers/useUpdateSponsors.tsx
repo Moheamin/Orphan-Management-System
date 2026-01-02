@@ -8,14 +8,18 @@ export function useUpdateSponsors() {
   const { isPending, mutate: updateSponsorMutate } = useMutation({
     mutationFn: updateSponsor,
     onSuccess: () => {
-      toast.success("Sponsor updated successfully!");
+      toast.success("تم تحديث بيانات الكفيل بنجاح!");
+      // ✅ Invalidate and refetch immediately
       queryClient.invalidateQueries({
         queryKey: ["sponsors"],
-        exact: false, // allow partial match
+      });
+      queryClient.refetchQueries({
+        queryKey: ["sponsors"],
+        type: "active",
       });
     },
     onError: (error) => {
-      toast.error("Failed to update! Please check your connection.");
+      toast.error("فشل في التحديث! يرجى التحقق من الاتصال.");
       console.error(error);
     },
   });

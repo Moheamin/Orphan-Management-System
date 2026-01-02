@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Mail, Phone, SquarePen, X } from "lucide-react";
+import { SquarePen, X } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { useGetSponsors } from "../../utils/ReactQuerry/Sponsers/useGetSponsors";
 import { useDeleteSponsors } from "../../utils/ReactQuerry/Sponsers/useDeleteSponsors";
 import SponsorModal from "./SponsorModal";
@@ -9,8 +10,14 @@ import { DataTable } from "../../components/CompoundTable";
 function SponsorsTableContent() {
   const { data, error, isLoading } = useGetSponsors();
   const { deleteSponsorMutate } = useDeleteSponsors();
-  const { searchQuery, deleteConfirm, setDeleteConfirm, setIsModalOpen } =
-    DataTable.useContext();
+  const {
+    searchQuery,
+    deleteConfirm,
+    setDeleteConfirm,
+    setIsModalOpen,
+    editItem,
+    setEditItem,
+  } = DataTable.useContext();
 
   const sponsors = data?.sponsor || [];
 
@@ -39,6 +46,11 @@ function SponsorsTableContent() {
     });
   }
 
+  function handleEdit(sponsor: any) {
+    setEditItem(sponsor);
+    setIsModalOpen(true);
+  }
+
   if (isLoading) return <DataTable.Loading />;
   if (error) return <DataTable.Error />;
 
@@ -47,9 +59,15 @@ function SponsorsTableContent() {
       {/* Modal rendered when isModalOpen is true */}
       <DataTable.ModalWrapper>
         <SponsorModal
-          setIsModel={
-            setIsModalOpen as React.Dispatch<React.SetStateAction<boolean>>
+          setIsModel={(value) =>
+            setIsModalOpen(typeof value === "function" ? value(false) : value)
           }
+          onCompleted={() => {
+            console.log("Sponsor saved successfully!");
+            setEditItem(null);
+            setIsModalOpen(false);
+          }}
+          editData={editItem}
         />
       </DataTable.ModalWrapper>
 
@@ -74,7 +92,7 @@ function SponsorsTableContent() {
               معلومات الاتصال
             </DataTable.TableHeaderCell>
             <DataTable.TableHeaderCell>عدد الكفالات</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>المبلغ الشهري</DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell>نوع الكفالة</DataTable.TableHeaderCell>
             <DataTable.TableHeaderCell>
               تاريخ الانضمام
             </DataTable.TableHeaderCell>
@@ -103,16 +121,12 @@ function SponsorsTableContent() {
                 <DataTable.TableCell>
                   <div className="flex flex-col gap-1 text-gray-700">
                     <div className="flex items-center gap-1 text-xs">
-                      <span>
-                        <Phone size={12} />
-                      </span>
+                      <span>{<Phone size={12} />}</span>
                       <span>{sponsor?.phone}</span>
                     </div>
                     {sponsor?.email && (
                       <div className="flex items-center gap-1 text-xs">
-                        <span>
-                          <Mail size={12} />
-                        </span>
+                        <span>{<Mail size={12} />}</span>
                         <span className="truncate max-w-[200px]">
                           {sponsor?.email}
                         </span>
@@ -128,9 +142,7 @@ function SponsorsTableContent() {
                 </DataTable.TableCell>
 
                 <DataTable.TableCell className="text-gray-700">
-                  {sponsor?.monthly_amount
-                    ? `${sponsor.monthly_amount.toLocaleString()} دينار عراقي`
-                    : "-"}
+                  {sponsor?.sponsorship_type || "كفالة شهرية"}
                 </DataTable.TableCell>
 
                 <DataTable.TableCell className="text-gray-700 text-xs">
@@ -148,6 +160,7 @@ function SponsorsTableContent() {
                 <DataTable.TableCell>
                   <div className="flex items-center justify-start gap-3">
                     <button
+                      onClick={() => handleEdit(sponsor)}
                       title="تعديل"
                       className="text-gray-500 hover:text-emerald-600 transition"
                     >

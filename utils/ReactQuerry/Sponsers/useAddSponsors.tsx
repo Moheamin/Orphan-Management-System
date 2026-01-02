@@ -14,8 +14,13 @@ export function useAddSponsors() {
     onSuccess: () => {
       console.log("✅ Sponsor added - invalidating queries");
       toast.success("تم إضافة الكفيل بنجاح!");
+      // ✅ Invalidate and refetch immediately
       queryClient.invalidateQueries({
-        queryKey: ["sponsors"], // ✅ Must match useGetSponsors
+        queryKey: ["sponsors"],
+      });
+      queryClient.refetchQueries({
+        queryKey: ["sponsors"],
+        type: "active",
       });
     },
     onError: (error) => {

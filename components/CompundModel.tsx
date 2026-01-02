@@ -1,9 +1,9 @@
-import { ReactNode, createContext, useContext } from "react";
+import { type ReactNode, createContext, useContext } from "react";
 import {
   useForm,
-  UseFormReturn,
-  FieldValues,
-  DefaultValues,
+  type UseFormReturn,
+  type FieldValues,
+  type DefaultValues,
 } from "react-hook-form";
 
 // Context Types
@@ -11,6 +11,8 @@ interface ModalContextType<T extends FieldValues> {
   form: UseFormReturn<T>;
   isPending: boolean;
   onClose: () => void;
+  mode: "create" | "edit";
+  editId?: string | number | null;
 }
 
 const ModalContext = createContext<ModalContextType<any> | undefined>(
@@ -32,6 +34,9 @@ interface RootProps<T extends FieldValues> {
   onSubmit: (data: T) => void;
   defaultValues?: DefaultValues<T>;
   isPending?: boolean;
+  mode?: "create" | "edit";
+  editId?: string | number | null;
+  key?: string;
 }
 
 function Root<T extends FieldValues>({
@@ -40,15 +45,18 @@ function Root<T extends FieldValues>({
   onSubmit,
   defaultValues,
   isPending = false,
+  mode = "create",
+  editId = null,
 }: RootProps<T>) {
   const form = useForm<T>({
     defaultValues,
+    mode: "onChange", // ✅ Enable validation on change
   });
 
   const handleSubmit = form.handleSubmit(onSubmit);
 
   return (
-    <ModalContext.Provider value={{ form, isPending, onClose }}>
+    <ModalContext.Provider value={{ form, isPending, onClose, mode, editId }}>
       <div
         className="fixed inset-0 bg-black/50 z-30 cursor-pointer flex items-center justify-center p-4"
         onClick={onClose}
@@ -67,16 +75,18 @@ function Root<T extends FieldValues>({
 // Header Component
 interface HeaderProps {
   title: string;
+  editTitle?: string;
   onClose?: () => void;
 }
 
-function Header({ title, onClose }: HeaderProps) {
-  const { onClose: contextOnClose } = useModalContext();
+function Header({ title, editTitle, onClose }: HeaderProps) {
+  const { onClose: contextOnClose, mode } = useModalContext();
   const handleClose = onClose || contextOnClose;
+  const displayTitle = mode === "edit" && editTitle ? editTitle : title;
 
   return (
     <div className="flex items-center justify-between p-6 border-b border-gray-200">
-      <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+      <h2 className="text-xl font-semibold text-gray-800">{displayTitle}</h2>
       <button
         type="button"
         onClick={handleClose}
@@ -165,7 +175,9 @@ function Input<T extends FieldValues>({
         type={type}
         {...register(name as any, validation)}
         placeholder={placeholder}
-        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition"
+        className={`w-full px-4 py-3 bg-gray-50 border ${
+          error ? "border-red-500" : "border-gray-300"
+        } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
       />
       {error && (
         <p className="text-red-500 text-sm mt-1">{error.message as string}</p>
@@ -216,7 +228,9 @@ function Select<T extends FieldValues>({
       </label>
       <select
         {...register(name as any, validation)}
-        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition appearance-none"
+        className={`w-full px-4 py-3 bg-gray-50 border ${
+          error ? "border-red-500" : "border-gray-300"
+        } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition appearance-none`}
         defaultValue={defaultValue || ""}
       >
         {placeholder && (
@@ -242,6 +256,7 @@ interface FooterProps {
   children?: ReactNode;
   cancelText?: string;
   submitText?: string;
+  editSubmitText?: string;
   loadingText?: string;
 }
 
@@ -249,13 +264,16 @@ function Footer({
   children,
   cancelText = "إلغاء",
   submitText = "حفظ",
+  editSubmitText = "تحديث",
   loadingText = "جاري الحفظ...",
 }: FooterProps) {
-  const { isPending, onClose } = useModalContext();
+  const { isPending, onClose, mode } = useModalContext();
 
   if (children) {
     return <div className="flex gap-3 mt-6 justify-end">{children}</div>;
   }
+
+  const buttonText = mode === "edit" ? editSubmitText : submitText;
 
   return (
     <div className="flex gap-3 mt-6 justify-end">
@@ -272,7 +290,7 @@ function Footer({
         className="px-6 py-2.5 text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={isPending}
       >
-        {isPending ? loadingText : submitText}
+        {isPending ? loadingText : buttonText}
       </button>
     </div>
   );

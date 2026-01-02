@@ -16,8 +16,14 @@ const getPriorityColor = (value?: number | string) => {
 function OrphansTableContent() {
   const { data, error, isLoading } = useGetOrphans();
   const { deleteOrphanMutate } = useDeleteOrphans();
-  const { searchQuery, deleteConfirm, setDeleteConfirm, setIsModalOpen } =
-    DataTable.useContext();
+  const {
+    searchQuery,
+    deleteConfirm,
+    setDeleteConfirm,
+    setIsModalOpen,
+    editItem,
+    setEditItem,
+  } = DataTable.useContext();
 
   const orphans = data?.orphan || [];
 
@@ -45,6 +51,11 @@ function OrphansTableContent() {
     });
   }
 
+  function handleEdit(orphan: any) {
+    setEditItem(orphan);
+    setIsModalOpen(true);
+  }
+
   if (isLoading) return <DataTable.Loading />;
   if (error) return <DataTable.Error />;
 
@@ -53,8 +64,15 @@ function OrphansTableContent() {
       {/* Modal rendered when isModalOpen is true */}
       <DataTable.ModalWrapper>
         <OrphanModal
-          setIsModal={(value) => setIsModalOpen(typeof value === 'function' ? value(false) : value)}
-          onSuccess={() => console.log("Orphan added successfully!")}
+          setIsModel={(value) =>
+            setIsModalOpen(typeof value === "function" ? value(false) : value)
+          }
+          onSuccess={() => {
+            console.log("Orphan saved successfully!");
+            setEditItem(null);
+            setIsModalOpen(false);
+          }}
+          editData={editItem}
         />
       </DataTable.ModalWrapper>
 
@@ -142,6 +160,7 @@ function OrphansTableContent() {
                 <DataTable.TableCell>
                   <div className="flex items-center justify-start gap-3">
                     <button
+                      onClick={() => handleEdit(orphan)}
                       title="تعديل"
                       className="text-gray-500 hover:text-emerald-600 transition"
                     >

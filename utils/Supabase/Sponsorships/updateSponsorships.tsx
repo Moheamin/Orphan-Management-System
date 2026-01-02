@@ -8,7 +8,7 @@ export async function updateSponsor(payload: UpdateSponsorPayload) {
   const updateData = toSnakeCase(rest);
 
   const { data, error } = await supabase()
-    .from("sponsor")
+    .from("sponsorship")
     .update(updateData)
     .eq("id", id)
     .select()

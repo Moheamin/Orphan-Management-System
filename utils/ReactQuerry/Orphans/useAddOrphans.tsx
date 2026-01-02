@@ -13,8 +13,13 @@ export function useAddOrphans() {
     mutationFn: addOrphan,
     onSuccess: () => {
       toast.success("تم إضافة اليتيم بنجاح!");
+      // ✅ Invalidate and refetch immediately
       queryClient.invalidateQueries({
         queryKey: ["orphans"],
+      });
+      queryClient.refetchQueries({
+        queryKey: ["orphans"],
+        type: "active",
       });
     },
     onError: (error) => {
@@ -23,5 +28,5 @@ export function useAddOrphans() {
     },
   });
 
-  return { addOrphanMutate, isPending, isSuccess }; // ✅ Add isSuccess
+  return { addOrphanMutate, isPending, isSuccess };
 }

@@ -1,133 +1,160 @@
-import { useState, useEffect } from "react";
-import { useAddSponsors } from "../../utils/ReactQuerry/Sponsers/useAddSponsors";
 import { Modal } from "../../components/CompundModel";
-
-type FormData = {
-  fullName: string;
-  phone: string;
-  email?: string;
-  monthlyAmount: string;
-  sponsorshipCount: string;
-  status: string;
-};
+import { useAddSponsors } from "../../utils/ReactQuerry/Sponsers/useAddSponsors";
+import { useUpdateSponsors } from "../../utils/ReactQuerry/Sponsers/useUpdateSponsors";
+import { type SponsorFormData, type SponsorPayload } from "../../utils/sponsor";
 
 type SponsorModalProps = {
   setIsModel: React.Dispatch<React.SetStateAction<boolean>>;
-  onSuccess?: () => void;
+  onCompleted?: () => void;
+  editData?: {
+    id: number;
+    name: string;
+    phone: string;
+    email?: string | null;
+    sponsorship_type?: string;
+    sponsorship_count?: string;
+    status?: string;
+  } | null;
 };
 
 export default function SponsorModal({
   setIsModel,
-  onSuccess,
+  onCompleted,
+  editData,
 }: SponsorModalProps) {
-  const [shouldClose, setShouldClose] = useState(false);
-  const { addSponsorMutate, isPending, isSuccess } = useAddSponsors();
+  const isEditMode = Boolean(editData);
 
-  // Watch for successful mutation to close modal
-  useEffect(() => {
-    if (isSuccess && shouldClose) {
-      setIsModel(false);
-      onSuccess?.();
-      setShouldClose(false);
-    }
-  }, [isSuccess, shouldClose, setIsModel, onSuccess]);
+  /* ================= ADD ================= */
+  const { addSponsorMutate, isPending: isAddPending } = useAddSponsors();
 
-  const handleSubmit = (data: FormData) => {
-    const sponsorData = {
+  /* ================= UPDATE ================= */
+  const { updateSponsorMutate, isPending: isUpdatePending } =
+    useUpdateSponsors();
+
+  const isPending = isAddPending || isUpdatePending;
+
+  // ✅ Generate a unique key to force form remount when editData changes
+  const modalKey = editData?.id ? `edit-${editData.id}` : "create-new";
+
+  /* ================= DEFAULT VALUES ================= */
+  const defaultValues: Partial<SponsorFormData> = editData
+    ? {
+        fullName: editData.name ?? "",
+        phone: editData.phone ?? "",
+        email: editData.email ?? "",
+        sponsorshipType: editData.sponsorship_type,
+        sponsorshipCount: editData.sponsorship_count?.toString() ?? "0",
+        status: editData.status ?? "نشط",
+      }
+    : {
+        status: "نشط",
+        sponsorshipType: "كفالة جزئية",
+        sponsorshipCount: "0",
+      };
+
+  /* ================= SUBMIT ================= */
+  const handleSubmit = (data: SponsorFormData) => {
+    // Convert form data -> API payload
+    const payload: SponsorPayload = {
       name: data.fullName,
       phone: data.phone,
       email: data.email || null,
-      monthlyAmount: data.monthlyAmount,
+      sponsorshipType: data.sponsorshipType,
       sponsorshipCount: data.sponsorshipCount,
       status: data.status,
     };
-
-    addSponsorMutate(sponsorData);
-    setShouldClose(true);
+    if (isEditMode && editData) {
+      updateSponsorMutate(
+        { id: editData.id, ...payload },
+        {
+          onSuccess: () => {
+            setIsModel(false);
+            onCompleted?.();
+          },
+          onError: (error) => {
+            console.error("Update failed:", error);
+          },
+        }
+      );
+    } else {
+      addSponsorMutate(payload as any, {
+        onSuccess: () => {
+          setIsModel(false);
+          onCompleted?.();
+        },
+        onError: (error) => {
+          console.error("Add failed:", error);
+        },
+      });
+    }
   };
 
   return (
-    <Modal.Root<FormData>
+    <Modal.Root<SponsorFormData>
+      key={modalKey}
       onClose={() => setIsModel(false)}
       onSubmit={handleSubmit}
       isPending={isPending}
-      defaultValues={{ status: "نشط", sponsorshipCount: "0" }}
+      defaultValues={defaultValues}
+      mode={isEditMode ? "edit" : "create"}
+      editId={editData?.id}
     >
-      <Modal.Header title="إضافة كفيل جديد" />
+      <Modal.Header title="إضافة كفيل جديد" editTitle="تعديل بيانات الكفيل" />
 
       <Modal.Body>
         <Modal.Grid cols={2}>
-          <Modal.Input<FormData>
+          <Modal.Input
             name="fullName"
-            label="الاسم الكامل"
-            placeholder="ادخل الاسم الكامل"
-            validation={{ required: "الاسم الكامل مطلوب" }}
-            span={1}
+            label="الاسم الكامل *"
+            validation={{ required: "الاسم مطلوب" }}
           />
 
-          <Modal.Input<FormData>
+          <Modal.Input
             name="phone"
-            label="رقم الهاتف"
+            label="رقم الهاتف *"
             type="tel"
-            placeholder="05xxxxxxxx"
             validation={{
               required: "رقم الهاتف مطلوب",
               pattern: {
                 value: /^[0-9]{10,11}$/,
-                message: "رقم الهاتف يجب أن يكون 10-11 رقم",
+                message: "رقم الهاتف غير صحيح",
               },
             }}
-            span={1}
           />
 
-          <Modal.Input<FormData>
+          <Modal.Input
             name="email"
-            label="البريد الإلكتروني (اختياري)"
+            label="البريد الإلكتروني"
             type="email"
-            placeholder="example@email.com"
-            validation={{
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: "البريد الإلكتروني غير صحيح",
-              },
-            }}
             span={2}
           />
 
-          <Modal.Input<FormData>
-            name="monthlyAmount"
-            label="المبلغ الشهري (دينار)"
-            type="number"
-            placeholder="1500"
-            validation={{
-              required: "المبلغ الشهري مطلوب",
-              min: { value: 0, message: "المبلغ يجب أن يكون أكبر من 0" },
-            }}
-            span={1}
+          <Modal.Select
+            name="sponsorshipType"
+            label="نوع الكفالة"
+            span={2}
+            options={[
+              { value: "كفالة كاملة", label: "كفالة كاملة" },
+              { value: "كفالة جزئية", label: "كفالة جزئية" },
+              { value: "كفالة صحية", label: "كفالة صحية" },
+              { value: "كفالة دراسة", label: "كفالة دراسة" },
+            ]}
           />
 
-          <Modal.Input<FormData>
+          <Modal.Input
             name="sponsorshipCount"
             label="عدد الكفالات"
             type="number"
-            placeholder="0"
-            validation={{
-              required: "عدد الكفالات مطلوب",
-              min: { value: 0, message: "العدد يجب أن يكون 0 أو أكثر" },
-            }}
-            span={1}
           />
 
-          <Modal.Select<FormData>
+          <Modal.Select
             name="status"
             label="الحالة"
+            span={2}
             options={[
               { value: "نشط", label: "نشط" },
               { value: "متوقف", label: "متوقف" },
             ]}
-            validation={{ required: "الحالة مطلوبة" }}
-            defaultValue="نشط"
-            span={2}
           />
         </Modal.Grid>
 
