@@ -13,7 +13,7 @@ export default function CheckPopup({
       onClick={onCancel}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-slideUp"
+        className="bg-[var(--fillColor)] rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-slideUp"
         onClick={(e) => e.stopPropagation()}
         dir="rtl"
       >
@@ -21,7 +21,7 @@ export default function CheckPopup({
         <div className="bg-gradient-to-br from-red-50 to-red-100 px-6 pt-6 pb-4 relative">
           <button
             onClick={onCancel}
-            className="absolute left-4 top-4 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute left-4 top-4 text-[var(--cellTextColor)] hover:text-[var(--borderColor)]/40 transition-colors"
           >
             <X size={20} />
           </button>
@@ -36,10 +36,10 @@ export default function CheckPopup({
 
         {/* Content */}
         <div className="px-6 py-6">
-          <p className="text-center text-gray-600 text-base leading-relaxed">
+          <p className="text-center text-[var(--textMuted2)] text-base leading-relaxed">
             هل أنت متأكد من حذف هذا العنصر؟
             <br />
-            <span className="text-sm text-gray-500 mt-2 inline-block">
+            <span className="text-sm text-[var(--textMuted2)]/40 mt-2 inline-block">
               لا يمكن التراجع عن هذا الإجراء
             </span>
           </p>

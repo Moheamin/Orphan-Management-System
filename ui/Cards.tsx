@@ -19,16 +19,16 @@ export default function Cards() {
       <Card>
         <div className="p-2 flex items-center justify-between w-full">
           {/* Icon Container */}
-          <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
+          <div className="p-3 bg-[var(--fillColor)] rounded-xl text-[var(--primeColor)]">
             <Users size={28} />
           </div>
 
           <div className="flex flex-col items-end text-right gap-1">
-            <h2 className="text-gray-500 text-sm font-medium">
+            <h2 className="text-[var(--textMuted2)]  text-sm font-medium">
               اجمالي الكفلاء
             </h2>
-            <p className="text-2xl font-bold text-gray-900">
-              {isLoading ? "..." : data?.totalSponsors ?? 0}
+            <p className="text-2xl font-bold text-[var(--cellTextColor)]">
+              {isLoading ? "..." : (data?.totalSponsors ?? 0)}
             </p>
           </div>
         </div>
@@ -38,16 +38,16 @@ export default function Cards() {
       <Card>
         <div className="p-2 flex items-center justify-between w-full">
           {/* Icon Container */}
-          <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
+          <div className="p-3 bg-[var(--fillColor)] rounded-xl text-[var(--primeColor)]">
             <Handshake size={28} />
           </div>
 
           <div className="flex flex-col items-end text-right gap-1">
-            <h2 className="text-gray-500 text-sm font-medium">
+            <h2 className="text-[var(--textMuted2)] text-sm font-medium">
               اجمالي الكفالات
             </h2>
-            <p className="text-2xl font-bold text-gray-900">
-              {isLoading ? "..." : data?.totalSponsorships ?? 0}
+            <p className="text-2xl font-bold text-[var(--cellTextColor)]  ">
+              {isLoading ? "..." : (data?.totalSponsorships ?? 0)}
             </p>
           </div>
         </div>

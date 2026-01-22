@@ -35,7 +35,7 @@ function OrphansTableContent() {
       (orphan: any) =>
         orphan?.name?.toLowerCase().includes(query) ||
         orphan?.phone?.toLowerCase().includes(query) ||
-        orphan?.email?.toLowerCase().includes(query)
+        orphan?.email?.toLowerCase().includes(query),
     );
   }, [orphans, searchQuery]);
 
@@ -112,28 +112,28 @@ function OrphansTableContent() {
               <DataTable.TableRow
                 key={orphan?.id ?? `${orphan?.name}-${orphan?.age}`}
               >
-                <DataTable.TableCell className="text-right font-medium text-gray-900">
+                <DataTable.TableCell className="text-right font-medium text-[var(--cellTextColor)]">
                   {orphan?.name}
                 </DataTable.TableCell>
 
-                <DataTable.TableCell className="text-gray-700">
+                <DataTable.TableCell className="text-[var(--cellTextColor)]">
                   {orphan?.age} سنة
                 </DataTable.TableCell>
 
-                <DataTable.TableCell className="text-gray-700">
+                <DataTable.TableCell className="text-[var(--cellTextColor)]">
                   {orphan?.type}
                 </DataTable.TableCell>
 
-                <DataTable.TableCell className="text-gray-700">
+                <DataTable.TableCell className="text-[var(--cellTextColor)]">
                   {orphan?.residence}
                 </DataTable.TableCell>
 
                 <DataTable.TableCell>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-[var(--cellTextColor)]">
                       {orphan?.priority}
                     </span>
-                    <div className="h-1.5 w-24 rounded-full bg-emerald-50">
+                    <div className="h-1.5 w-24 rounded-full bg-[var(--borderColor)]">
                       <div
                         className="h-full rounded-full transition-all"
                         style={{
@@ -149,8 +149,8 @@ function OrphansTableContent() {
                   <span
                     className={`inline-flex items-center justify-center rounded-full px-4 py-1 text-xs font-medium ${
                       orphan?.is_sponsored
-                        ? "bg-emerald-600 text-white"
-                        : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        ? "bg-[var(--primeColor)] text-white"
+                        : "bg-[var(--fillColor)] text-[var(--primeColor)] border border-emerald-200"
                     }`}
                   >
                     {orphan?.is_sponsored ? "مكفول" : "غير مكفول"}
@@ -162,7 +162,7 @@ function OrphansTableContent() {
                     <button
                       onClick={() => handleEdit(orphan)}
                       title="تعديل"
-                      className="text-gray-500 hover:text-emerald-600 transition"
+                      className="text-[var(--borderColor)] hover:text-[var(--primeColor)] transition"
                     >
                       <SquarePen size={16} />
                     </button>

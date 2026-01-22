@@ -1,8 +1,10 @@
 import { supabase } from "../supabase";
-import { type UpdateSponsorPayload } from "../../sponsor";
 import { toSnakeCase } from "../../toSnakeCase";
 
-export async function updateSponsor(payload: UpdateSponsorPayload) {
+export async function updateSponsorships(payload: {
+  id: number;
+  note: string;
+}) {
   const { id, ...rest } = payload;
 
   const updateData = toSnakeCase(rest);

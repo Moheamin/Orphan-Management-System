@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { SquarePen, X } from "lucide-react";
-import { Mail, Phone } from "lucide-react";
+import { SquarePen, X, Mail, Phone } from "lucide-react";
 import { useGetSponsors } from "../../utils/ReactQuerry/Sponsers/useGetSponsors";
 import { useDeleteSponsors } from "../../utils/ReactQuerry/Sponsers/useDeleteSponsors";
 import SponsorModal from "./SponsorModal";
@@ -30,15 +29,13 @@ function SponsorsTableContent() {
       (sponsor: any) =>
         sponsor?.name?.toLowerCase().includes(query) ||
         sponsor?.phone?.toLowerCase().includes(query) ||
-        sponsor?.email?.toLowerCase().includes(query)
+        sponsor?.email?.toLowerCase().includes(query),
     );
   }, [sponsors, searchQuery]);
 
   function handleDelete(sponsorId: string) {
     deleteSponsorMutate(sponsorId, {
-      onSuccess: () => {
-        setDeleteConfirm(null);
-      },
+      onSuccess: () => setDeleteConfirm(null),
       onError: (error) => {
         console.error("Failed to delete sponsor:", error);
         setDeleteConfirm(null);
@@ -56,14 +53,13 @@ function SponsorsTableContent() {
 
   return (
     <>
-      {/* Modal rendered when isModalOpen is true */}
+      {/* Modal */}
       <DataTable.ModalWrapper>
         <SponsorModal
           setIsModel={(value) =>
             setIsModalOpen(typeof value === "function" ? value(false) : value)
           }
           onCompleted={() => {
-            console.log("Sponsor saved successfully!");
             setEditItem(null);
             setIsModalOpen(false);
           }}
@@ -71,7 +67,7 @@ function SponsorsTableContent() {
         />
       </DataTable.ModalWrapper>
 
-      {/* Delete Confirmation Popup */}
+      {/* Delete Confirmation */}
       {deleteConfirm !== null && (
         <CheckPopup
           onClick={() => handleDelete(deleteConfirm as string)}
@@ -84,20 +80,30 @@ function SponsorsTableContent() {
         <DataTable.AddButton label="كفيل" />
       </DataTable.Header>
 
-      <DataTable.Table>
+      <DataTable.Table className="table-fixed w-full">
         <DataTable.TableHead>
-          <tr>
-            <DataTable.TableHeaderCell>الاسم</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>
+          <tr className="border-b border-[var(--borderColor)]">
+            <DataTable.TableHeaderCell className="py-3 px-4 text-right text-[var(--textMuted2)] w-1/7">
+              الاسم
+            </DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="py-3 px-4 text-right text-[var(--textMuted2)] w-2/7">
               معلومات الاتصال
             </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>عدد الكفالات</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>نوع الكفالة</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="py-3 px-4 text-center text-[var(--textMuted2)] w-1/7">
+              عدد الكفالات
+            </DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="py-3 px-4 text-[var(--textMuted2)] w-1/7">
+              نوع الكفالة
+            </DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="py-3 px-4 text-[var(--textMuted2)] w-1/7">
               تاريخ الانضمام
             </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>الحالة</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>الإجراءات</DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="py-3 px-4 text-center text-[var(--textMuted2)] w-1/7">
+              الحالة
+            </DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="py-3 px-4 text-center text-[var(--textMuted2)] w-1/7">
+              الإجراءات
+            </DataTable.TableHeaderCell>
           </tr>
         </DataTable.TableHead>
 
@@ -107,26 +113,27 @@ function SponsorsTableContent() {
           renderRow={(sponsor: any) => {
             const statusClasses =
               sponsor?.status === "نشط"
-                ? "bg-emerald-600 text-white"
-                : "bg-gray-100 text-gray-600 border border-gray-300";
+                ? "bg-[var(--primeColor)] text-white"
+                : "bg-[var(--backgroundColor)] text-[var(--textMuted)] border border-[var(--borderColor)]";
 
             return (
               <DataTable.TableRow
                 key={sponsor?.id ?? `${sponsor?.name}-${sponsor?.phone}`}
+                className="hover:bg-[var(--fillColor)] transition-colors border-b border-[var(--borderColor)]"
               >
-                <DataTable.TableCell className="text-right font-medium text-gray-900">
+                <DataTable.TableCell className="py-3 px-4 text-right font-medium text-[var(--textColor)] truncate">
                   {sponsor?.name}
                 </DataTable.TableCell>
 
-                <DataTable.TableCell>
-                  <div className="flex flex-col gap-1 text-gray-700">
+                <DataTable.TableCell className="py-3 px-4">
+                  <div className="flex flex-col gap-1 text-[var(--subTextColor)]">
                     <div className="flex items-center gap-1 text-xs">
-                      <span>{<Phone size={12} />}</span>
+                      <Phone size={12} />
                       <span>{sponsor?.phone}</span>
                     </div>
                     {sponsor?.email && (
                       <div className="flex items-center gap-1 text-xs">
-                        <span>{<Mail size={12} />}</span>
+                        <Mail size={12} />
                         <span className="truncate max-w-[200px]">
                           {sponsor?.email}
                         </span>
@@ -135,21 +142,21 @@ function SponsorsTableContent() {
                   </div>
                 </DataTable.TableCell>
 
-                <DataTable.TableCell className="text-center text-gray-700">
-                  <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
+                <DataTable.TableCell className="py-3 px-4 text-center">
+                  <span className="inline-flex items-center justify-center rounded-full px-3 py-1 text-sm font-medium bg-[var(--fillColor)] text-[var(--primeColor)]">
                     {sponsor?.sponsorship_count || 0}
                   </span>
                 </DataTable.TableCell>
 
-                <DataTable.TableCell className="text-gray-700">
+                <DataTable.TableCell className="py-3 px-4 text-[var(--subTextColor)] truncate">
                   {sponsor?.sponsorship_type || "كفالة شهرية"}
                 </DataTable.TableCell>
 
-                <DataTable.TableCell className="text-gray-700 text-xs">
+                <DataTable.TableCell className="py-3 px-4 text-xs text-[var(--textMuted)] truncate">
                   {sponsor?.join_date || "-"}
                 </DataTable.TableCell>
 
-                <DataTable.TableCell>
+                <DataTable.TableCell className="py-3 px-4 text-center">
                   <span
                     className={`inline-flex items-center justify-center rounded-full px-4 py-1 text-xs font-medium ${statusClasses}`}
                   >
@@ -157,17 +164,17 @@ function SponsorsTableContent() {
                   </span>
                 </DataTable.TableCell>
 
-                <DataTable.TableCell>
-                  <div className="flex items-center justify-start gap-3">
+                <DataTable.TableCell className="py-3 px-4 text-center">
+                  <div className="flex items-center justify-center gap-3">
                     <button
                       onClick={() => handleEdit(sponsor)}
                       title="تعديل"
-                      className="text-gray-500 hover:text-emerald-600 transition"
+                      className="text-[var(--textMuted2)] hover:text-[var(--primeColor)] transition"
                     >
                       <SquarePen size={16} />
                     </button>
                     <button onClick={() => setDeleteConfirm(sponsor?.id)}>
-                      <X size={16} color="#be1010" className="cursor-pointer" />
+                      <X size={16} className="text-[#be1010] cursor-pointer" />
                     </button>
                   </div>
                 </DataTable.TableCell>

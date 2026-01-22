@@ -23,7 +23,6 @@ const navItems = [
   { icon: Baby, label: "الكفلاء", path: "/sponsors" },
   { icon: Heart, label: "الكفالات", path: "/sponsorships" },
   { icon: DollarSign, label: "الرواتب الشهرية", path: "/salaries" },
-  { icon: FileText, label: "التقارير", path: "/reports" },
   { icon: Settings, label: "الإعدادات", path: "/settings" },
 ];
 
@@ -32,7 +31,7 @@ export default function Navbar({ isOpen, setIsOpen }: NavbarProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop - Click to close */}
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -52,7 +51,10 @@ export default function Navbar({ isOpen, setIsOpen }: NavbarProps) {
               damping: 25,
               stiffness: 200,
             }}
-            className="fixed top-0 left-0 h-full w-64 bg-white border-2 border-[var(--borderColor)] flex flex-col justify-between px-2 z-40 shadow-xl"
+            className="fixed top-0 left-0 h-full w-64
+            bg-[var(--backgroundColor)]
+            border-2 border-[var(--borderColor)]
+            flex flex-col justify-between px-2 z-40 shadow-xl"
           >
             <div>
               {/* Header */}
@@ -60,20 +62,23 @@ export default function Navbar({ isOpen, setIsOpen }: NavbarProps) {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.4 }}
-                className="text-right flex flex-row gap-3 items-end justify-end my-[19px] border-b-2 border-[var(--borderColor)] pb-4"
+                className="text-right flex flex-row gap-3 items-end justify-end
+                my-[19px] border-b-2 border-[var(--borderColor)] pb-4"
               >
                 <div className="flex flex-col items-end justify-end mr-2">
-                  <h1 className="text-xl font-semibold">إدارة الأيتام</h1>
-                  <p className="text-gray-400 text-sm">مؤسسة خيرية</p>
+                  <h1 className="text-xl font-semibold text-[var(--textColor)]">
+                    إدارة الأيتام
+                  </h1>
+                  <p className="text-[var(--textMuted)] text-sm">مؤسسة خيرية</p>
                 </div>
                 <div className="mr-4.5">
-                  <MyIcon size={48} shape="rounded" color="#4a7c59">
+                  <MyIcon size={48} shape="rounded" color="var(--primeColor)">
                     <Heart size={24} color="white" />
                   </MyIcon>
                 </div>
               </motion.div>
 
-              {/* Navigation Items with stagger */}
+              {/* Navigation Items */}
               <div className="flex flex-col items-end justify-end mt-10 gap-4 mr-5">
                 {navItems.map((item, index) => (
                   <motion.div
@@ -90,11 +95,11 @@ export default function Navbar({ isOpen, setIsOpen }: NavbarProps) {
                   >
                     <NavLink
                       to={item.path}
-                      onClick={() => setIsOpen(false)} // Close navbar after clicking
+                      onClick={() => setIsOpen(false)}
                       className={({ isActive }) =>
                         `w-full block ${
                           isActive
-                            ? "ring-2 ring-emerald-300 rounded-[20px]"
+                            ? "ring-2 ring-[var(--primeColor)] rounded-[20px]"
                             : ""
                         }`
                       }
@@ -106,9 +111,10 @@ export default function Navbar({ isOpen, setIsOpen }: NavbarProps) {
                           className="w-full"
                         >
                           <Button
-                            adj={`w-full pl-20 pr-5 py-4 flex items-center justify-end gap-2 text-white rounded-[20px] cursor-pointer transition-all ${
+                            adj={`w-full pl-20 pr-5 py-4 flex items-center justify-end gap-2
+                            text-white rounded-[20px] cursor-pointer transition-all ${
                               isActive
-                                ? "bg-emerald-700 shadow-lg"
+                                ? "bg-[var(--primeColor)] shadow-lg"
                                 : "bg-[var(--primeColor)]"
                             }`}
                           >
@@ -134,9 +140,11 @@ export default function Navbar({ isOpen, setIsOpen }: NavbarProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.4 }}
-              className="w-full bg-white border-t-2 border-[var(--borderColor)] p-2 flex flex-col items-center justify-center"
+              className="w-full bg-[var(--backgroundColor)]
+              border-t-2 border-[var(--borderColor)]
+              p-2 flex flex-col items-center justify-center"
             >
-              <span className="text-stone-400 w-full flex items-center justify-center mt-4 text-md">
+              <span className="text-[var(--textMuted)] w-full flex items-center justify-center mt-4 text-md">
                 مهيمن رائد حميد
               </span>
             </motion.footer>

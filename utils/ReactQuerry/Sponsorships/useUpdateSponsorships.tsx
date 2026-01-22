@@ -1,22 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateOrphan } from "../../Supabase/Orphans/updateOrphans";
+import { updateSponsorships } from "../../Supabase/Sponsorships/updateSponsorships";
 import { toast } from "react-hot-toast";
 
-export function useUpdateOrphans() {
+export function useUpdateSponsorships() {
   const queryClient = useQueryClient();
 
-  const { isPending, mutate: updateOrphanMutate } = useMutation({
-    mutationFn: updateOrphan,
+  const mutation = useMutation({
+    mutationFn: updateSponsorships,
     onSuccess: () => {
-      toast.success("تم تحديث بيانات اليتيم بنجاح!");
-      // ✅ Invalidate and refetch immediately
-      queryClient.invalidateQueries({
-        queryKey: ["orphans"],
-      });
-      queryClient.refetchQueries({
-        queryKey: ["orphans"],
-        type: "active",
-      });
+      toast.success("تم تحديث الملاحظة بنجاح!");
+      queryClient.invalidateQueries({ queryKey: ["sponsorships"] });
     },
     onError: (error) => {
       toast.error("فشل في التحديث! يرجى التحقق من الاتصال.");
@@ -24,5 +17,9 @@ export function useUpdateOrphans() {
     },
   });
 
-  return { updateOrphanMutate, isPending };
+  return {
+    updateNote: mutation.mutate,
+    isUpdating: mutation.isPending,
+    isError: mutation.error,
+  };
 }

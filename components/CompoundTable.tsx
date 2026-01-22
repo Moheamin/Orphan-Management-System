@@ -16,7 +16,7 @@ interface DataTableContextType {
 }
 
 const DataTableContext = createContext<DataTableContextType | undefined>(
-  undefined
+  undefined,
 );
 
 const useDataTableContext = () => {
@@ -38,7 +38,7 @@ function Root({ children, dir = "rtl", className = "" }: RootProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | number | null>(
-    null
+    null,
   );
   const [editItem, setEditItem] = useState<any | null>(null);
 
@@ -57,7 +57,7 @@ function Root({ children, dir = "rtl", className = "" }: RootProps) {
     >
       <div
         dir={dir}
-        className={`w-full rounded-3xl border border-emerald-100 bg-emerald-50/40 p-4 md:p-6 ${className}`}
+        className={`w-full rounded-3xl border border-[var(--borderColor)] bg-[var(--fillColor)]/30 p-4 md:p-6 ${className}`}
       >
         {children}
       </div>
@@ -102,7 +102,7 @@ function SearchInput({
 
   return (
     <div className={`relative w-full md:max-w-md ${className}`}>
-      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[var(--borderColor)]">
         <Search size={16} color="var(--iconColor)" />
       </span>
       <input
@@ -110,12 +110,12 @@ function SearchInput({
         value={searchQuery}
         onChange={(e) => handleChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-full border border-emerald-100 bg-emerald-50 px-10 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"
+        className="w-full rounded-full border border-[var(--borderColor)] bg-[var(--fillColor)] px-10 py-2 text-sm text-[var(--textColor)] placeholder:text-[var(--cellTextColor)] focus:border-[var(--primeColor)] focus:bg-[var(--backgroundColor)] focus:outline-none focus:ring-2 focus:ring-[var(--primeColor)]"
       />
       {searchQuery && (
         <button
           onClick={() => handleChange("")}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--subtextColor)] hover:text-[var(--cellTextColor)]"
         >
           <X size={16} />
         </button>
@@ -142,7 +142,7 @@ function AddButton({ label, onClick, className = "" }: AddButtonProps) {
 
   return (
     <Button
-      adj={`inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm text-emerald-700 shadow-sm hover:bg-emerald-50 transition whitespace-nowrap ${className}`}
+      adj={`inline-flex items-center gap-2 rounded-full border border-[var(--primeColor)/40] bg-white px-4 py-2 text-sm text-[var(--primeColor)] shadow-sm hover:bg-[var(--fillColor)] transition whitespace-nowrap ${className}`}
       onClick={handleClick}
     >
       <span className="text-md font-semibold">اضافة</span>
@@ -181,7 +181,7 @@ function Table({ children, className = "" }: TableProps) {
   return (
     <div className="overflow-x-auto">
       <table
-        className={`min-w-full rounded-2xl border border-emerald-100 bg-white text-sm ${className}`}
+        className={`min-w-full rounded-2xl border border-[var(--backgroundColor)] bg-[var(--backgroundColor)]/40 text-sm ${className}`}
       >
         {children}
       </table>
@@ -217,7 +217,7 @@ function TableBody<T>({
   const query = searchQuery ?? contextSearchQuery;
 
   return (
-    <tbody className="divide-y divide-emerald-50">
+    <tbody className="divide-y divide-[var(--fillColor)]">
       {data.length === 0 ? (
         <tr>
           <td colSpan={100} className="px-4 py-8 text-center text-gray-500">
@@ -240,7 +240,7 @@ interface TableHeaderCellProps {
 function TableHeaderCell({ children, className = "" }: TableHeaderCellProps) {
   return (
     <th
-      className={`px-4 py-3 text-right text-xs font-semibold text-emerald-900 ${className}`}
+      className={`px-4 py-3 text-right text-xs font-semibold text-[var(--iconColor)] ${className}`}
     >
       {children}
     </th>
@@ -255,7 +255,9 @@ interface TableRowProps {
 
 function TableRow({ children, className = "" }: TableRowProps) {
   return (
-    <tr className={`hover:bg-emerald-50/60 transition-colors ${className}`}>
+    <tr
+      className={`hover:bg-[var(--fillColor)]/40 transition-colors ${className}`}
+    >
       {children}
     </tr>
   );
@@ -288,7 +290,7 @@ function ResultsCount({
   if (!searchQuery) return null;
 
   return (
-    <div className="mt-3 text-center text-xs text-gray-500">
+    <div className="mt-3 text-center text-xs text-[var(--cellTextColor)]">
       عرض {filteredCount} من {totalCount} {label}
     </div>
   );

@@ -24,13 +24,13 @@ function Header({
         </Button>
 
         <div className="flex items-center justify-center text-center gap-0.5 ">
-          <p className="text-xl">نظام ادارة الايتام </p>
+          <p className="text-xl">نظام إدارة الأيتام </p>
           <Button
-            adj=" rounded-full m-2 transition duration-300 delay-15 hover:bg-green-200 "
+            adj=" rounded-full m-2 transition duration-300 delay-15 hover:bg-[var(--primeColor)]/40  "
             onClick={() => setIsOpen(!isOpen)}
           >
             <Book
-              className="w-8 h-8 text-[var(--textColor)] ml-4 mr-5"
+              className="w-8 h-8 text-(--textColor) m-2.5"
               size={16}
               color="black"
             />

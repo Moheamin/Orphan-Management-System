@@ -17,7 +17,8 @@ export type SponsorPayload = {
   email?: string | null;
   sponsorshipType?: string;
   sponsorshipCount?: string | undefined;
-  status: string;
+  status?: string;
+  note?: string;
 };
 
 /* ===== Update payload ===== */
