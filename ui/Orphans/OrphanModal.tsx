@@ -77,7 +77,6 @@ export default function OrphanModal({
       type: data.orphanType,
       priority: calculatePriority(data),
       is_sponsored: editData?.is_sponsored || false,
-      actions: null,
       residence: data.residence || "بغداد",
       gender: data.gender,
       poverty_level: data.povertyLevel,
@@ -96,7 +95,7 @@ export default function OrphanModal({
           onError: (error) => {
             console.error("Update failed:", error);
           },
-        }
+        },
       );
     } else {
       addOrphanMutate(orphanData, {

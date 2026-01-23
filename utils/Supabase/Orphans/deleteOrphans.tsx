@@ -1,6 +1,12 @@
 import { supabase } from "../supabase";
 
 export async function deleteOrphan(orphanId: number) {
-  const { error } = await supabase().from("orphan").delete().eq("id", orphanId);
-  return { error };
+  // We use .update() instead of .delete()
+  const { data, error } = await supabase()
+    .from("orphan")
+    .update({ is_deleted: true }) // Set your flag here
+    .order("created_at", { ascending: false })
+    .eq("id", orphanId);
+
+  return { data, error };
 }

@@ -4,7 +4,6 @@ import { toast } from "react-hot-toast";
 
 export function useUpdateSponsors() {
   const queryClient = useQueryClient();
-
   const { isPending, mutate: updateSponsorMutate } = useMutation({
     mutationFn: updateSponsor,
     onSuccess: () => {
@@ -13,6 +12,7 @@ export function useUpdateSponsors() {
       queryClient.invalidateQueries({
         queryKey: ["sponsors"],
       });
+      queryClient.invalidateQueries({ queryKey: ["sponsorStats"] });
       queryClient.refetchQueries({
         queryKey: ["sponsors"],
         type: "active",

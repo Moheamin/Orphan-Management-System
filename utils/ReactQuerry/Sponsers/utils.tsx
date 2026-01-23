@@ -3,7 +3,7 @@ import { fetchSponsorStats } from "../../Supabase/Sponsors/utils";
 
 export function useSponsorStats() {
   return useQuery({
-    queryKey: ["sponsor-stats"],
+    queryKey: ["sponsorStats"],
     queryFn: fetchSponsorStats,
   });
 }

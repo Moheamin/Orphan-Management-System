@@ -4,7 +4,8 @@ export async function FetchSponsor() {
   const { data, error } = await supabase()
     .from("sponsor") // ✅ Correct table name (singular)
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .eq("is_deleted", false);
 
   if (error) {
     console.error("❌ Supabase fetch error:", error);

@@ -1,6 +1,8 @@
 import { Users, Handshake } from "lucide-react"; //
 import Card from "../components/Card";
 import { useSponsorStats } from "../utils/ReactQuerry/Sponsers/utils";
+import { useUpdateSponsors } from "../utils/ReactQuerry/Sponsers/useUpdateSponsors";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function Cards() {
   const { data, isLoading, error } = useSponsorStats();

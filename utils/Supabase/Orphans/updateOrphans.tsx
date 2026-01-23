@@ -12,7 +12,7 @@ type UpdateOrphanPayload = {
   poverty_level?: string;
   priority?: number;
   is_sponsored?: boolean;
-  actions?: string | null;
+  is_deleted?: boolean;
 };
 
 export async function updateOrphan(payload: UpdateOrphanPayload) {

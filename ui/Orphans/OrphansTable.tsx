@@ -162,7 +162,7 @@ function OrphansTableContent() {
                     <button
                       onClick={() => handleEdit(orphan)}
                       title="تعديل"
-                      className="text-[var(--borderColor)] hover:text-[var(--primeColor)] transition"
+                      className="text-[var(--textMuted)] hover:text-[var(--primeColor)] transition"
                     >
                       <SquarePen size={16} />
                     </button>

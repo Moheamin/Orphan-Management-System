@@ -2,7 +2,7 @@ import { supabase } from "../supabase";
 import { toSnakeCase } from "../../toSnakeCase";
 
 export async function updateSponsorships(payload: {
-  id: number;
+  id: string;
   note: string;
 }) {
   const { id, ...rest } = payload;

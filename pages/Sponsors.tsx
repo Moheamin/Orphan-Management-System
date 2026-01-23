@@ -12,6 +12,7 @@ function Sponsors() {
             اضافة وادارة بيانات الكفلاء والمتبرعين
           </p>
         </div>
+
         <Cards />
         <br />
         <Table />

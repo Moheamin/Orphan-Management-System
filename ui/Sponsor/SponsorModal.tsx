@@ -1,4 +1,5 @@
 import { Modal } from "../../components/CompundModel";
+import { useOrphanLookup } from "../../utils/ReactQuerry/orphanLookup";
 import { useAddSponsors } from "../../utils/ReactQuerry/Sponsers/useAddSponsors";
 import { useUpdateSponsors } from "../../utils/ReactQuerry/Sponsers/useUpdateSponsors";
 import { type SponsorFormData, type SponsorPayload } from "../../utils/sponsor";
@@ -8,6 +9,7 @@ type SponsorModalProps = {
   onCompleted?: () => void;
   editData?: {
     id: number;
+    orphanId: string;
     name: string;
     phone: string;
     email?: string | null;
@@ -23,6 +25,7 @@ export default function SponsorModal({
   editData,
 }: SponsorModalProps) {
   const isEditMode = Boolean(editData);
+  const { data: orphans } = useOrphanLookup();
 
   /* ================= ADD ================= */
   const { addSponsorMutate, isPending: isAddPending } = useAddSponsors();
@@ -39,6 +42,7 @@ export default function SponsorModal({
   /* ================= DEFAULT VALUES ================= */
   const defaultValues: Partial<SponsorFormData> = editData
     ? {
+        orphanId: editData.orphanId ?? null,
         fullName: editData.name ?? "",
         phone: editData.phone ?? "",
         email: editData.email ?? "",
@@ -56,6 +60,7 @@ export default function SponsorModal({
   const handleSubmit = (data: SponsorFormData) => {
     // Convert form data -> API payload
     const payload: SponsorPayload = {
+      orphanId: data.orphanId,
       name: data.fullName,
       phone: data.phone,
       email: data.email || null,
@@ -74,7 +79,7 @@ export default function SponsorModal({
           onError: (error) => {
             console.error("Update failed:", error);
           },
-        }
+        },
       );
     } else {
       addSponsorMutate(payload as any, {
@@ -139,6 +144,7 @@ export default function SponsorModal({
               { value: "كفالة صحية", label: "كفالة صحية" },
               { value: "كفالة دراسة", label: "كفالة دراسة" },
             ]}
+            placeholder="اختر نوع الكفالة"
           />
 
           <Modal.Input
@@ -147,6 +153,18 @@ export default function SponsorModal({
             type="number"
           />
 
+          <Modal.Select
+            name="orphanId"
+            label="اختيار يتيم"
+            span={2}
+            options={
+              orphans?.map((orphan: any) => ({
+                value: orphan.id,
+                label: orphan.name,
+              })) || []
+            }
+            placeholder="يرجى أختيار يتيم ..."
+          />
           <Modal.Select
             name="status"
             label="الحالة"

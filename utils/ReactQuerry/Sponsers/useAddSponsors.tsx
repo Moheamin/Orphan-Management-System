@@ -22,6 +22,7 @@ export function useAddSponsors() {
         queryKey: ["sponsors"],
         type: "active",
       });
+      queryClient.invalidateQueries({ queryKey: ["sponsorStats"] });
     },
     onError: (error) => {
       console.error("❌ Add sponsor error:", error);

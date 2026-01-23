@@ -1,13 +1,10 @@
 import { supabase } from "../supabase";
 
 export async function deleteSponsor(sponsorId: string) {
-  console.log("Attempting to delete sponsor with ID:", sponsorId);
-
   const { data, error } = await supabase()
     .from("sponsor") // ✅ Correct table name (singular)
-    .delete()
-    .eq("id", sponsorId)
-    .select();
+    .update({ is_deleted: true }) // Set your flag here
+    .eq("id", sponsorId);
 
   if (error) {
     console.error("❌ Supabase delete error:", error);

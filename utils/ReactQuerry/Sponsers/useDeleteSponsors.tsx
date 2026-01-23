@@ -13,6 +13,7 @@ export function useDeleteSponsors() {
         queryKey: ["sponsors"],
         exact: false, // allow partial match
       });
+      queryClient.invalidateQueries({ queryKey: ["sponsorStats"] });
     },
     onError: (error) => {
       console.error("❌ Delete sponsor error:", error);

@@ -169,7 +169,7 @@ function SponsorsTableContent() {
                     <button
                       onClick={() => handleEdit(sponsor)}
                       title="تعديل"
-                      className="text-[var(--textMuted2)] hover:text-[var(--primeColor)] transition"
+                      className="text-[var(--textMuted)] hover:text-[var(--primeColor)] transition"
                     >
                       <SquarePen size={16} />
                     </button>

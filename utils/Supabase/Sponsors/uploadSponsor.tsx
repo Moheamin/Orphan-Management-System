@@ -12,7 +12,7 @@ export async function addSponsor(payload: SponsorFormData) {
 
   const { data, error } = await supabase()
     .from("sponsor")
-    .insert(insertData)
+    .insert({ ...insertData, is_deleted: false })
     .select()
     .single();
 

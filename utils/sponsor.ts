@@ -2,16 +2,19 @@
 
 /* ===== Form data (Modal / UI) ===== */
 export type SponsorFormData = {
+  orphanId: string;
   fullName: string;
   phone: string;
   email?: string;
   sponsorshipType?: string;
   sponsorshipCount?: string;
   status: string;
+  isDeleted: boolean;
 };
 
 /* ===== API payload ===== */
 export type SponsorPayload = {
+  orphanId: string;
   name: string;
   phone: string;
   email?: string | null;
