@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router-dom";
 import Orphans from "../pages/Orphans";
 import Sponsors from "../pages/Sponsors";
 import SponserShips from "../pages/SponserShips";
+import Salaries from "../pages/Salaries";
+
 import Header from "../ui/Header";
 import Navbar from "../ui/Navbar";
 import { useState } from "react";
@@ -14,6 +16,7 @@ function App() {
         <Route path="/Sponsors" element={<Sponsors />} />
         <Route index path="/Orphans" element={<Orphans />} />
         <Route path="/sponsorships" element={<SponserShips />} />
+        <Route path="/salaries" element={<Salaries />} />
       </Routes>
       <Navbar isOpen={isOpen} setIsOpen={setIsOpen} />
     </>
