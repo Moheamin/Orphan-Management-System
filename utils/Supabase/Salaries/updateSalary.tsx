@@ -10,7 +10,7 @@ export async function updateSalary(payload: UpdateSalaryPayload) {
   const { id, ...updateData } = payload;
 
   const { data, error } = await supabase()
-    .from("salary")
+    .from("sposnor_payment") //
     .update(updateData)
     .eq("id", id)
     .select();

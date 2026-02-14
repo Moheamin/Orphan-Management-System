@@ -1,8 +1,8 @@
 import "../src/index.css";
 import Cards from "../ui/Cards";
-import Table from "../ui/Sponsor/SponsorTable";
+import SponsorsTable from "../ui/Sponsor/SponsorTable";
 
-function Sponsors() {
+export default function Sponsors() {
   return (
     <>
       <div className="mx-8">
@@ -15,10 +15,8 @@ function Sponsors() {
 
         <Cards />
         <br />
-        <Table />
+        <SponsorsTable />
       </div>
     </>
   );
 }
-
-export default Sponsors;

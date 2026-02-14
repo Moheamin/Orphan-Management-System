@@ -25,7 +25,7 @@ export default function SalaryModal({
 
   const isPending = isAddPending || isUpdatePending;
 
-  // Uses payment_id from the View to ensure the correct record is targeted
+  // Use payment_id as the unique key to force form reset when switching records
   const modalKey = editData?.payment_id
     ? `edit-${editData.payment_id}`
     : "create-new";
@@ -35,37 +35,35 @@ export default function SalaryModal({
         amount: editData.amount?.toString() || "",
         status: editData.status || "",
       }
-    : undefined;
+    : {
+        amount: "",
+        status: "قيد الانتظار",
+      };
 
-  const handleSubmit = (data: FormData) => {
+  const onSubmit = (data: FormData) => {
     const salaryData = {
       amount: parseFloat(data.amount),
       status: data.status,
     };
 
+    const mutationOptions = {
+      onSuccess: () => {
+        setIsModel(false);
+        onSuccess?.();
+      },
+      onError: (error: any) => {
+        console.error("Mutation failed:", error);
+      },
+    };
+
     if (isEditMode) {
-      // mapping view's payment_id to table's primary key 'id'
       updateSalaryMutate(
         { id: editData.payment_id, ...salaryData },
-        {
-          onSuccess: () => {
-            setIsModel(false);
-            onSuccess?.();
-          },
-          onError: (error) => {
-            console.error("Update failed:", error);
-          },
-        },
+        mutationOptions,
       );
     } else {
-      // Note: If adding a brand new salary, ensure your mutation/table
-      // receives sponsor_id and orphan_id as well.
-      addSalaryMutate(salaryData, {
-        onSuccess: () => {
-          setIsModel(false);
-          onSuccess?.();
-        },
-      });
+      // NOTE: For a real 'Add', you'd likely need sponsor_id/orphan_id here
+      addSalaryMutate(salaryData, mutationOptions);
     }
   };
 
@@ -73,33 +71,37 @@ export default function SalaryModal({
     <Modal.Root<FormData>
       key={modalKey}
       onClose={() => setIsModel(false)}
-      onSubmit={handleSubmit}
+      onSubmit={onSubmit}
       isPending={isPending}
       defaultValues={defaultValues}
       mode={isEditMode ? "edit" : "create"}
-      editId={editData?.payment_id}
     >
       <Modal.Header
         title="إضافة دفعة مالية"
         editTitle={
           editData?.sponsor_name
-            ? `معالجة كفالة: ${editData.sponsor_name}`
-            : "تعديل البيانات"
+            ? `تعديل كفالة: ${editData.sponsor_name}`
+            : "تعديل البيانات المالية"
         }
       />
+
       <Modal.Body>
-        <Modal.Grid cols={2}>
+        <Modal.Grid>
           <Modal.Input<FormData>
             name="amount"
-            label="المبلغ *"
+            label="المبلغ (د.ع) *"
+            type="number"
             placeholder="0.00"
-            validation={{ required: "المبلغ مطلوب" }}
+            validation={{
+              required: "المبلغ مطلوب",
+              min: { value: 1000, message: "أقل مبلغ هو 1000 دينار" },
+            }}
             span={1}
           />
 
           <Modal.Select<FormData>
             name="status"
-            label="الحالة *"
+            label="حالة الدفع *"
             placeholder="اختر الحالة"
             options={[
               { value: "مدفوع", label: "مدفوع" },
@@ -110,7 +112,20 @@ export default function SalaryModal({
             span={1}
           />
         </Modal.Grid>
-        <Modal.Footer />
+
+        {/* Informative note for the admin */}
+        {editData?.orphan_name && (
+          <div className="mt-4 p-3 rounded-lg bg-[var(--fillColor)]/40 border border-[var(--borderColor)]/20">
+            <p className="text-xs text-[var(--subTextColor)]">
+              المستفيد:{" "}
+              <span className="font-bold text-[var(--primeColor)]">
+                {editData.orphan_name}
+              </span>
+            </p>
+          </div>
+        )}
+
+        <Modal.Footer submitText="حفظ الدفعة" />
       </Modal.Body>
     </Modal.Root>
   );

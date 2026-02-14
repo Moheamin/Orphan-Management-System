@@ -1,16 +1,37 @@
 import { useMemo } from "react";
-import { SquarePen, X, Mail, Phone } from "lucide-react";
+import { SquarePen, Trash2, Mail, Phone, UserCheck } from "lucide-react";
 import { useGetSponsors } from "../../utils/ReactQuerry/Sponsers/useGetSponsors";
 import { useDeleteSponsors } from "../../utils/ReactQuerry/Sponsers/useDeleteSponsors";
 import SponsorModal from "./SponsorModal";
 import CheckPopup from "../checkPopup";
 import { DataTable } from "../../components/CompoundTable";
 
+interface Sponsor {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string | null;
+  sponsorship_count: number;
+  sponsorship_type: string;
+  join_date: string;
+  status: "نشط" | "متوقف";
+}
+
+// 1. Define Filter Options for Sponsors
+const SPONSOR_FILTERS = [
+  { label: "كفلاء نشطون", value: "active" },
+  { label: "كفلاء متوقفون", value: "inactive" },
+  { label: "كفالات متعددة (> 2)", value: "high_volume" },
+];
+
 function SponsorsTableContent() {
   const { data, error, isLoading } = useGetSponsors();
   const { deleteSponsorMutate } = useDeleteSponsors();
+
+  // 2. Destructure filterValue from context
   const {
     searchQuery,
+    filterValue,
     deleteConfirm,
     setDeleteConfirm,
     setIsModalOpen,
@@ -18,47 +39,59 @@ function SponsorsTableContent() {
     setEditItem,
   } = DataTable.useContext();
 
-  const sponsors = data?.sponsor || [];
+  const sponsors: Sponsor[] = data?.sponsor || [];
 
-  // Filter sponsors based on search query
+  // 3. Updated Filtering Logic (Search + Dropdown)
   const filteredSponsors = useMemo(() => {
-    if (!searchQuery.trim()) return sponsors;
+    let result = sponsors;
 
-    const query = searchQuery.toLowerCase();
-    return sponsors.filter(
-      (sponsor: any) =>
-        sponsor?.name?.toLowerCase().includes(query) ||
-        sponsor?.phone?.toLowerCase().includes(query) ||
-        sponsor?.email?.toLowerCase().includes(query),
-    );
-  }, [sponsors, searchQuery]);
+    // A. Apply Search
+    const query = searchQuery.trim().toLowerCase();
+    if (query) {
+      result = result.filter(
+        (s) =>
+          s.name?.toLowerCase().includes(query) ||
+          s.phone?.includes(query) ||
+          s.email?.toLowerCase().includes(query),
+      );
+    }
 
-  function handleDelete(sponsorId: string) {
+    // B. Apply Dropdown Filter
+    if (filterValue && filterValue !== "all") {
+      switch (filterValue) {
+        case "active":
+          result = result.filter((s) => s.status === "نشط");
+          break;
+        case "inactive":
+          result = result.filter((s) => s.status === "متوقف");
+          break;
+        case "high_volume":
+          result = result.filter((s) => s.sponsorship_count >= 2);
+          break;
+        default:
+          break;
+      }
+    }
+
+    return result;
+  }, [sponsors, searchQuery, filterValue]);
+
+  const handleDelete = (sponsorId: string) => {
     deleteSponsorMutate(sponsorId, {
       onSuccess: () => setDeleteConfirm(null),
-      onError: (error) => {
-        console.error("Failed to delete sponsor:", error);
-        setDeleteConfirm(null);
-      },
+      onError: () => setDeleteConfirm(null),
     });
-  }
-
-  function handleEdit(sponsor: any) {
-    setEditItem(sponsor);
-    setIsModalOpen(true);
-  }
+  };
 
   if (isLoading) return <DataTable.Loading />;
-  if (error) return <DataTable.Error />;
+  if (error)
+    return <DataTable.Error message="حدث خطأ أثناء تحميل بيانات الكفلاء" />;
 
   return (
     <>
-      {/* Modal */}
       <DataTable.ModalWrapper>
         <SponsorModal
-          setIsModel={(value) =>
-            setIsModalOpen(typeof value === "function" ? value(false) : value)
-          }
+          setIsModel={(val) => setIsModalOpen(!!val)}
           onCompleted={() => {
             setEditItem(null);
             setIsModalOpen(false);
@@ -67,7 +100,6 @@ function SponsorsTableContent() {
         />
       </DataTable.ModalWrapper>
 
-      {/* Delete Confirmation */}
       {deleteConfirm !== null && (
         <CheckPopup
           onClick={() => handleDelete(deleteConfirm as string)}
@@ -77,123 +109,131 @@ function SponsorsTableContent() {
 
       <DataTable.Header>
         <DataTable.SearchInput placeholder="البحث عن كفيل..." />
+
+        {/* 4. Filter Component Added Here */}
+        <DataTable.Filter label="تصفية الكفلاء" options={SPONSOR_FILTERS} />
+
         <DataTable.AddButton label="كفيل" />
       </DataTable.Header>
 
-      <DataTable.Table className="table-fixed w-full">
+      <DataTable.Table>
         <DataTable.TableHead>
-          <tr className="border-b border-[var(--borderColor)]">
-            <DataTable.TableHeaderCell className="py-3 px-4 text-right text-[var(--textMuted2)] w-1/7">
-              الاسم
+          <DataTable.TableRow>
+            <DataTable.TableHeaderCell>الكفيل</DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="hidden md:table-cell">
+              الاتصال
             </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="py-3 px-4 text-right text-[var(--textMuted2)] w-2/7">
-              معلومات الاتصال
+            <DataTable.TableHeaderCell className="hidden lg:table-cell text-center">
+              الكفالات
             </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="py-3 px-4 text-center text-[var(--textMuted2)] w-1/7">
-              عدد الكفالات
-            </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="py-3 px-4 text-[var(--textMuted2)] w-1/7">
-              نوع الكفالة
-            </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="py-3 px-4 text-[var(--textMuted2)] w-1/7">
-              تاريخ الانضمام
-            </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="py-3 px-4 text-center text-[var(--textMuted2)] w-1/7">
+            <DataTable.TableHeaderCell className="text-center">
               الحالة
             </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="py-3 px-4 text-center text-[var(--textMuted2)] w-1/7">
+            <DataTable.TableHeaderCell className="text-center">
               الإجراءات
             </DataTable.TableHeaderCell>
-          </tr>
+          </DataTable.TableRow>
         </DataTable.TableHead>
 
         <DataTable.TableBody
           data={filteredSponsors}
-          emptyMessage="لا توجد بيانات"
-          renderRow={(sponsor: any) => {
-            const statusClasses =
-              sponsor?.status === "نشط"
-                ? "bg-[var(--primeColor)] text-white"
-                : "bg-[var(--backgroundColor)] text-[var(--textMuted)] border border-[var(--borderColor)]";
+          emptyMessage={
+            filterValue !== "all"
+              ? "لا يوجد كفلاء يطابقون هذا الفلتر"
+              : "لا توجد بيانات"
+          }
+          renderRow={(sponsor: Sponsor) => (
+            <DataTable.TableRow key={sponsor.id}>
+              <DataTable.TableCell>
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-bold text-[var(--textColor)]">
+                    {sponsor.name}
+                  </span>
+                  <div className="flex items-center gap-1 text-[10px] text-[var(--textMuted)] md:hidden">
+                    <Phone size={10} />
+                    <span>{sponsor.phone}</span>
+                  </div>
+                </div>
+              </DataTable.TableCell>
 
-            return (
-              <DataTable.TableRow
-                key={sponsor?.id ?? `${sponsor?.name}-${sponsor?.phone}`}
-                className="hover:bg-[var(--fillColor)] transition-colors border-b border-[var(--borderColor)]"
-              >
-                <DataTable.TableCell className="py-3 px-4 text-right font-medium text-[var(--textColor)] truncate">
-                  {sponsor?.name}
-                </DataTable.TableCell>
-
-                <DataTable.TableCell className="py-3 px-4">
-                  <div className="flex flex-col gap-1 text-[var(--subTextColor)]">
-                    <div className="flex items-center gap-1 text-xs">
-                      <Phone size={12} />
-                      <span>{sponsor?.phone}</span>
+              <DataTable.TableCell className="hidden md:table-cell">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-xs text-[var(--textColor)]/80">
+                    <Phone size={12} className="text-[var(--primeColor)]" />
+                    <span className="tabular-nums">{sponsor.phone}</span>
+                  </div>
+                  {sponsor.email && (
+                    <div className="flex items-center gap-2 text-[10px] text-[var(--textMuted2)]">
+                      <Mail size={12} />
+                      <span className="truncate max-w-[150px]">
+                        {sponsor.email}
+                      </span>
                     </div>
-                    {sponsor?.email && (
-                      <div className="flex items-center gap-1 text-xs">
-                        <Mail size={12} />
-                        <span className="truncate max-w-[200px]">
-                          {sponsor?.email}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </DataTable.TableCell>
+                  )}
+                </div>
+              </DataTable.TableCell>
 
-                <DataTable.TableCell className="py-3 px-4 text-center">
-                  <span className="inline-flex items-center justify-center rounded-full px-3 py-1 text-sm font-medium bg-[var(--fillColor)] text-[var(--primeColor)]">
-                    {sponsor?.sponsorship_count || 0}
+              <DataTable.TableCell className="hidden lg:table-cell">
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-sm font-bold text-[var(--primeColor)]">
+                    {sponsor.sponsorship_count}
                   </span>
-                </DataTable.TableCell>
+                  <span className="text-[10px] text-[var(--textMuted)]">
+                    يتيم
+                  </span>
+                </div>
+              </DataTable.TableCell>
 
-                <DataTable.TableCell className="py-3 px-4 text-[var(--subTextColor)] truncate">
-                  {sponsor?.sponsorship_type || "كفالة شهرية"}
-                </DataTable.TableCell>
-
-                <DataTable.TableCell className="py-3 px-4 text-xs text-[var(--textMuted)] truncate">
-                  {sponsor?.join_date || "-"}
-                </DataTable.TableCell>
-
-                <DataTable.TableCell className="py-3 px-4 text-center">
+              <DataTable.TableCell>
+                <div className="flex justify-center">
                   <span
-                    className={`inline-flex items-center justify-center rounded-full px-4 py-1 text-xs font-medium ${statusClasses}`}
+                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border transition-colors ${
+                      sponsor.status === "نشط"
+                        ? "bg-[var(--fillColor)] text-[var(--primeColor)] border-[var(--primeColor)]"
+                        : "bg-[var(--fillColor)] text-[var(--errorColor)] border-[var(--errorColor)]"
+                    }`}
                   >
-                    {sponsor?.status || "نشط"}
+                    <UserCheck
+                      size={10}
+                      className={sponsor.status === "نشط" ? "block" : "hidden"}
+                    />
+                    {sponsor.status}
                   </span>
-                </DataTable.TableCell>
+                </div>
+              </DataTable.TableCell>
 
-                <DataTable.TableCell className="py-3 px-4 text-center">
-                  <div className="flex items-center justify-center gap-3">
-                    <button
-                      onClick={() => handleEdit(sponsor)}
-                      title="تعديل"
-                      className="text-[var(--textMuted)] hover:text-[var(--primeColor)] transition"
-                    >
-                      <SquarePen size={16} />
-                    </button>
-                    <button onClick={() => setDeleteConfirm(sponsor?.id)}>
-                      <X size={16} className="text-[#be1010] cursor-pointer" />
-                    </button>
-                  </div>
-                </DataTable.TableCell>
-              </DataTable.TableRow>
-            );
-          }}
+              <DataTable.TableCell>
+                <div className="flex justify-center items-center gap-2 md:gap-4">
+                  <button
+                    onClick={() => {
+                      setEditItem(sponsor);
+                      setIsModalOpen(true);
+                    }}
+                    className="p-2 text-[var(--primeColor)] hover:bg-[var(--borderColor)] rounded-lg transition-colors"
+                  >
+                    <SquarePen size={18} />
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(sponsor.id)}
+                    className="p-2 text-[var(--errorColor)] hover:bg-[var(--borderColor)] rounded-lg transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </DataTable.TableCell>
+            </DataTable.TableRow>
+          )}
         />
       </DataTable.Table>
 
       <DataTable.ResultsCount
-        filteredCount={filteredSponsors.length}
-        totalCount={sponsors.length}
-        label="كفيل"
+        count={filteredSponsors.length}
+        total={sponsors.length}
       />
     </>
   );
 }
 
-// Main export with Root provider
 export default function SponsorsTable() {
   return (
     <DataTable.Root>

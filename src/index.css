@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 * {
+  font-size: 14.5px;
   font-family: "Cairo", sans-serif;
 }
+/* Light Mode Defaults (Reference) */
 :root {
   --backgroundColor: #f5f5f5;
   --borderColor: #e0e0e0;
-  --primeColor: #4a7c59;
+  --primeColor: #4a7c59; /* Your Emerald Green */
   --textColor: #161f2c;
   --iconColor: #1a2e1a;
   --subTextColor: #1e2939;
@@ -14,4 +16,35 @@
   --fillColor: #ecfdf5;
   --textMuted: #9ca3af;
   --textMuted2: #6a7282;
+  --errorColor: #e53e3e;
+}
+
+/* Elegant Dark Mode */
+.dark {
+  /* 1. Deepest base - using a dark navy-green tint instead of pure black */
+  --backgroundColor: #0a0f0d;
+
+  /* 2. Soft borders to prevent harsh lines */
+  --borderColor: #1e2923;
+
+  /* 3. Keep your prime green but slightly brighten for contrast on dark bg */
+  --primeColor: #5ea375;
+
+  /* 4. Text - use an off-white/emerald-tinted white for eye comfort */
+  --textColor: #e2e8f0;
+  --subTextColor: #94a3b8;
+  --cellTextColor: #cbd5e1;
+
+  /* 5. Fill color - used for table rows/inputs. 
+        A deep green-tinted charcoal looks premium here. */
+  --fillColor: #121d18;
+
+  /* 6. Muted text - lower opacity or grey-blue tints */
+  --textMuted: #64748b;
+  --textMuted2: #475569;
+
+  /* 7. Icon color - bright but soft */
+  --iconColor: #9fdfbb;
+  /* 8. Error color - a rich red that stands out without being too harsh */
+  --errorColor: #e53e3e;
 }

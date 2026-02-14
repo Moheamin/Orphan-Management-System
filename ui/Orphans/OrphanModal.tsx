@@ -35,8 +35,8 @@ function calculatePriority(data: FormData) {
   if (data.healthCondition === "emergency") priority += 15;
   else if (data.healthCondition === "non_urgent") priority += 5;
 
-  if (data.residence === "homeless") priority += 20;
-  else if (data.residence === "rent") priority += 10;
+  if (data.residence === "بلا مأوى") priority += 20;
+  else if (data.residence === "إيجار") priority += 10;
   else priority += 5;
 
   return Math.min(priority, 100);
@@ -54,7 +54,7 @@ export default function OrphanModal({
 
   const isPending = isAddPending || isUpdatePending;
 
-  // ✅ Generate a unique key to force form remount when editData changes
+  // Key ensures form resets correctly when switching between different orphans
   const modalKey = editData?.id ? `edit-${editData.id}` : "create-new";
 
   const defaultValues = editData
@@ -68,9 +68,18 @@ export default function OrphanModal({
         educationLevel: editData.education_level ?? "",
         residence: editData.residence ?? "",
       }
-    : undefined;
+    : {
+        fullName: "",
+        age: "",
+        gender: "",
+        orphanType: "",
+        povertyLevel: "",
+        healthCondition: "",
+        educationLevel: "",
+        residence: "ملك",
+      };
 
-  const handleSubmit = (data: FormData) => {
+  const onSubmit = (data: FormData) => {
     const orphanData = {
       name: data.fullName,
       age: parseInt(data.age),
@@ -84,29 +93,20 @@ export default function OrphanModal({
       education_level: data.educationLevel,
     };
 
+    const mutationOptions = {
+      onSuccess: () => {
+        setIsModel(false);
+        onSuccess?.();
+      },
+      onError: (error: any) => {
+        console.error("Mutation failed:", error);
+      },
+    };
+
     if (isEditMode) {
-      updateOrphanMutate(
-        { id: editData.id, ...orphanData },
-        {
-          onSuccess: () => {
-            setIsModel(false);
-            onSuccess?.();
-          },
-          onError: (error) => {
-            console.error("Update failed:", error);
-          },
-        },
-      );
+      updateOrphanMutate({ id: editData.id, ...orphanData }, mutationOptions);
     } else {
-      addOrphanMutate(orphanData, {
-        onSuccess: () => {
-          setIsModel(false);
-          onSuccess?.();
-        },
-        onError: (error) => {
-          console.error("Add failed:", error);
-        },
-      });
+      addOrphanMutate(orphanData, mutationOptions);
     }
   };
 
@@ -114,22 +114,23 @@ export default function OrphanModal({
     <Modal.Root<FormData>
       key={modalKey}
       onClose={() => setIsModel(false)}
-      onSubmit={handleSubmit}
+      onSubmit={onSubmit}
       isPending={isPending}
       defaultValues={defaultValues}
       mode={isEditMode ? "edit" : "create"}
-      editId={editData?.id}
     >
       <Modal.Header title="إضافة يتيم جديد" editTitle="تعديل بيانات اليتيم" />
+
       <Modal.Body>
-        <Modal.Grid cols={2}>
+        <Modal.Grid>
           <Modal.Input<FormData>
             name="fullName"
             label="الاسم الكامل *"
             placeholder="ادخل الاسم الكامل"
             validation={{ required: "الاسم الكامل مطلوب" }}
-            span={1}
+            span={2} // Name takes full width for better readability
           />
+
           <Modal.Input<FormData>
             name="age"
             label="العمر *"
@@ -140,8 +141,8 @@ export default function OrphanModal({
               min: { value: 1, message: "العمر يجب أن يكون أكبر من 0" },
               max: { value: 18, message: "العمر يجب أن يكون أقل من 18" },
             }}
-            span={1}
           />
+
           <Modal.Select<FormData>
             name="gender"
             label="الجنس *"
@@ -151,8 +152,8 @@ export default function OrphanModal({
               { value: "female", label: "أنثى" },
             ]}
             validation={{ required: "الجنس مطلوب" }}
-            span={1}
           />
+
           <Modal.Select<FormData>
             name="orphanType"
             label="نوع اليتم *"
@@ -162,8 +163,8 @@ export default function OrphanModal({
               { value: "يتيم الأبوين", label: "يتيم الأبوين" },
             ]}
             validation={{ required: "نوع اليتم مطلوب" }}
-            span={1}
           />
+
           <Modal.Select<FormData>
             name="povertyLevel"
             label="درجة الفقر *"
@@ -173,8 +174,8 @@ export default function OrphanModal({
               { value: "weak", label: "ضعيف" },
             ]}
             validation={{ required: "درجة الفقر مطلوبة" }}
-            span={1}
           />
+
           <Modal.Select<FormData>
             name="healthCondition"
             label="الحالة الصحية *"
@@ -184,8 +185,8 @@ export default function OrphanModal({
               { value: "non_urgent", label: "حالة غير عاجلة" },
             ]}
             validation={{ required: "الحالة الصحية مطلوبة" }}
-            span={1}
           />
+
           <Modal.Select<FormData>
             name="residence"
             label="السكن *"
@@ -196,8 +197,8 @@ export default function OrphanModal({
               { value: "بلا مأوى", label: "بلا مأوى" },
             ]}
             validation={{ required: "السكن مطلوب" }}
-            span={1}
           />
+
           <Modal.Input<FormData>
             name="educationLevel"
             label="المستوى التعليمي *"
@@ -206,7 +207,8 @@ export default function OrphanModal({
             span={2}
           />
         </Modal.Grid>
-        <Modal.Footer />
+
+        <Modal.Footer submitText="حفظ البيانات" loadingText="جاري الحفظ..." />
       </Modal.Body>
     </Modal.Root>
   );

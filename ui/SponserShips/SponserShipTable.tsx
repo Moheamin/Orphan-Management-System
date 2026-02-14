@@ -1,136 +1,190 @@
 import { useState, useEffect, useMemo } from "react";
+import { StickyNote } from "lucide-react";
 import { DataTable } from "../../components/CompoundTable";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useGetSponsorships } from "../../utils/ReactQuerry/Sponsorships/useGetSponsorships";
 import { useUpdateSponsorships } from "../../utils/ReactQuerry/Sponsorships/useUpdateSponsorships";
 
+interface Sponsorship {
+  sponsorship_id: string;
+  sponsor_name: string;
+  orphan_name: string;
+  sponsorship_type: string;
+  start_date: string;
+  status: "نشط" | "متوقف";
+  note: string;
+}
+
+// 1. Define Filter Options
+const SPONSORSHIP_FILTERS = [
+  { label: "كفالات نشطة", value: "active" },
+  { label: "كفالات متوقفة", value: "cancelled" },
+  { label: "كفالة كاملة", value: "full" },
+  { label: "كفالة جزئية", value: "partial" },
+  { label: "كفالة دراسة", value: "educational" },
+  { label: "كفالة صحية", value: "medical" },
+];
+
 function SponsorshipsTableContent() {
-  // 1. Fetch data and mutations
   const { data: sponsorships, isLoading, isError } = useGetSponsorships();
   const { updateNote } = useUpdateSponsorships();
 
-  // 2. Get search query from DataTable Context
-  const { searchQuery } = DataTable.useContext();
+  // 2. Destructure filterValue from Context
+  const { searchQuery, filterValue } = DataTable.useContext();
 
-  // 3. State for handling notes
   const [notes, setNotes] = useState<Record<string, string>>({});
 
-  // Initialize notes from fetched data
   useEffect(() => {
     if (sponsorships) {
       const initialNotes: Record<string, string> = {};
-      sponsorships.forEach((s: any) => {
+      sponsorships.forEach((s: Sponsorship) => {
         initialNotes[s.sponsorship_id] = s.note || "";
       });
       setNotes(initialNotes);
     }
   }, [sponsorships]);
 
-  // 4. Search logic: Filters ONLY by Orphan Name or Sponsor Name
+  // 3. Integrated Filter & Search Logic
   const filteredSponsorships = useMemo(() => {
-    const data = sponsorships || [];
-    if (!searchQuery.trim()) return data;
+    let result: Sponsorship[] = sponsorships || [];
 
-    const query = searchQuery.toLowerCase();
-    return data.filter(
-      (s: any) =>
-        s?.sponsor_name?.toLowerCase().includes(query) ||
-        s?.orphan_name?.toLowerCase().includes(query),
-    );
-  }, [sponsorships, searchQuery]);
+    // A. Apply Search
+    const query = searchQuery.trim().toLowerCase();
+    if (query) {
+      result = result.filter(
+        (s) =>
+          s.sponsor_name?.toLowerCase().includes(query) ||
+          s.orphan_name?.toLowerCase().includes(query),
+      );
+    }
+
+    // B. Apply Dropdown Filter
+    if (filterValue && filterValue !== "all") {
+      switch (filterValue) {
+        case "active":
+          result = result.filter((s) => s.status === "نشط");
+          break;
+        case "cancelled":
+          result = result.filter((s) => s.status === "متوقف");
+          break;
+        case "full":
+          result = result.filter((s) => s.sponsorship_type.includes("كاملة"));
+          break;
+        case "partial":
+          result = result.filter((s) => s.sponsorship_type.includes("جزئية"));
+          break;
+        case "educational":
+          result = result.filter((s) => s.sponsorship_type.includes("دراسة"));
+          break;
+        case "medical":
+          result = result.filter((s) => s.sponsorship_type.includes("صحية"));
+          break;
+        default:
+          break;
+      }
+    }
+
+    return result;
+  }, [sponsorships, searchQuery, filterValue]);
 
   if (isLoading) return <LoadingSpinner />;
-  if (isError)
-    return (
-      <div className="p-8 text-center text-red-500">خطأ في جلب البيانات</div>
-    );
+  if (isError) return <DataTable.Error message="حدث خطأ عند تحميل البيانات" />;
 
   return (
     <>
-      {/* Search Header */}
       <DataTable.Header>
         <DataTable.SearchInput placeholder="البحث باسم الكفيل أو اليتيم..." />
+
+        {/* 4. Add the Filter Component */}
+        <DataTable.Filter
+          label="تصفية الكفالات"
+          options={SPONSORSHIP_FILTERS}
+        />
       </DataTable.Header>
 
-      <div className="rounded-2xl border overflow-hidden shadow-sm border-[var(--borderColor)] bg-[var(--backgroundColor)] mt-4">
-        <DataTable.Table className="table-fixed w-full">
-          <DataTable.TableHead>
-            <tr className="border-b border-[var(--borderColor)] bg-[var(--fillColor)]">
-              <DataTable.TableHeaderCell className="font-medium py-3 px-4 text-right text-[var(--textMuted2)] w-1/6">
-                الكفيل
-              </DataTable.TableHeaderCell>
-              <DataTable.TableHeaderCell className="font-medium py-3 px-4 text-right text-[var(--textMuted2)] w-1/6">
-                اليتيم
-              </DataTable.TableHeaderCell>
-              <DataTable.TableHeaderCell className="font-medium py-3 px-4 text-right text-[var(--textMuted2)] w-1/6">
-                نوع الكفالة
-              </DataTable.TableHeaderCell>
-              <DataTable.TableHeaderCell className="font-medium py-3 px-4 text-right text-[var(--textMuted2)] w-1/6">
-                تاريخ البداية
-              </DataTable.TableHeaderCell>
-              <DataTable.TableHeaderCell className="font-medium py-3 px-4 text-center text-[var(--textMuted2)] w-1/6">
-                الحالة
-              </DataTable.TableHeaderCell>
-              <DataTable.TableHeaderCell className="font-medium py-3 px-4 text-center text-[var(--textMuted2)] w-1/6">
-                الملاحظات
-              </DataTable.TableHeaderCell>
-            </tr>
-          </DataTable.TableHead>
+      <DataTable.Table>
+        <DataTable.TableHead>
+          <DataTable.TableRow>
+            <DataTable.TableHeaderCell>
+              الأطراف (كفيل/يتيم)
+            </DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="hidden md:table-cell">
+              النوع
+            </DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="hidden lg:table-cell">
+              البداية
+            </DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="text-center">
+              الحالة
+            </DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="w-1/3 min-w-[150px]">
+              الملاحظات
+            </DataTable.TableHeaderCell>
+          </DataTable.TableRow>
+        </DataTable.TableHead>
 
-          <DataTable.TableBody
-            data={filteredSponsorships}
-            emptyMessage="لا توجد بيانات تطابق البحث"
-            renderRow={(sponsorship: any) => (
-              <DataTable.TableRow
-                key={sponsorship.sponsorship_id}
-                className="border-b last:border-0 hover:bg-[var(--fillColor)] transition-colors border-[var(--borderColor)]"
-              >
-                <DataTable.TableCell className="text-right py-3 px-4 text-[var(--textColor)]/80 truncate">
-                  {sponsorship?.sponsor_name}
-                </DataTable.TableCell>
-
-                <DataTable.TableCell className="text-right font-medium py-3 px-4 text-[var(--textColor)]/80 truncate">
-                  {sponsorship?.orphan_name}
-                </DataTable.TableCell>
-
-                <DataTable.TableCell className="text-right py-3 px-4">
-                  <span className="inline-block px-3 py-1 rounded-full border text-xs border-[var(--primeColor)] text-[var(--primeColor)] bg-[var(--backgroundColor)]">
-                    {sponsorship?.sponsorship_type}
+        <DataTable.TableBody
+          data={filteredSponsorships}
+          emptyMessage={
+            filterValue !== "all"
+              ? "لا توجد كفالات تطابق هذا الفلتر"
+              : "لا توجد بيانات"
+          }
+          renderRow={(sponsorship: Sponsorship) => (
+            <DataTable.TableRow key={sponsorship.sponsorship_id}>
+              <DataTable.TableCell>
+                <div className="flex flex-col">
+                  <span className="font-bold text-[var(--textColor)] truncate max-w-[120px] md:max-w-none">
+                    {sponsorship.sponsor_name}
                   </span>
-                </DataTable.TableCell>
+                  <span className="text-[10px] text-[var(--textMuted)]">
+                    يتيم: {sponsorship.orphan_name}
+                  </span>
+                </div>
+              </DataTable.TableCell>
 
-                <DataTable.TableCell className="text-right py-3 px-4 tabular-nums truncate text-[var(--textMuted)]">
-                  {sponsorship?.start_date}
-                </DataTable.TableCell>
+              <DataTable.TableCell className="hidden md:table-cell">
+                <span className="px-2 py-0.5 rounded-md border border-[var(--primeColor)]/30 text-[10px] text-[var(--primeColor)]">
+                  {sponsorship.sponsorship_type}
+                </span>
+              </DataTable.TableCell>
 
-                <DataTable.TableCell className="py-3 px-4">
-                  <div className="flex justify-center items-center w-full">
-                    <span
-                      className={`inline-flex items-center justify-center px-6 py-1 rounded-full text-xs font-medium min-w-[80px] truncate ${
-                        sponsorship?.status === "نشط"
-                          ? "bg-[var(--primeColor)] text-white"
-                          : "bg-red-100 text-red-600 border border-red-200"
-                      }`}
-                    >
-                      {sponsorship?.status}
-                    </span>
-                  </div>
-                </DataTable.TableCell>
+              <DataTable.TableCell className="hidden lg:table-cell tabular-nums text-[var(--textMuted2)] text-xs">
+                {sponsorship.start_date}
+              </DataTable.TableCell>
 
-                <DataTable.TableCell className="py-3 px-4">
+              <DataTable.TableCell>
+                <div className="flex justify-center">
+                  <span
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                      sponsorship.status === "نشط"
+                        ? "bg-[var(--fillColor)] text-[var(--primeColor)] shadow-sm border border-[var(--primeColor)] shadow-[var(--primeColor)]/20"
+                        : "bg-[var(--fillColor)] text-[var(--errorColor)] border border-[var(--errorColor)]"
+                    }`}
+                  >
+                    {sponsorship.status}
+                  </span>
+                </div>
+              </DataTable.TableCell>
+
+              <DataTable.TableCell>
+                <div className="relative group">
                   <textarea
-                    className="w-full resize-none border border-[var(--borderColor)] rounded px-2 py-1 text-[var(--textColor)] 
-                    focus:ring-2 focus:ring-[var(--primeColor)] focus:outline-none 
-                    selection:bg-[var(--primeColor)] selection:text-white"
+                    rows={1}
+                    className="w-full text-xs text-[var(--textColor)] bg-[var(--borderColor)] border border-transparent rounded-lg px-2 py-2 
+                      hover:border-[var(--primeColor)] focus:bg-[var(--fillColor)] focus:border-[var(--primeColor)] 
+                      focus:ring-2 focus:ring-[var(--primeColor)]/10 resize-none overflow-hidden"
                     value={notes[sponsorship.sponsorship_id] || ""}
-                    placeholder="اضافة ملاحظة..."
+                    placeholder="ملاحظة..."
                     maxLength={90}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setNotes((prev) => ({
                         ...prev,
                         [sponsorship.sponsorship_id]: e.target.value,
-                      }))
-                    }
+                      }));
+                      e.target.style.height = "auto";
+                      e.target.style.height = `${e.target.scrollHeight}px`;
+                    }}
                     onBlur={() =>
                       updateNote({
                         id: sponsorship.sponsorship_id,
@@ -138,24 +192,25 @@ function SponsorshipsTableContent() {
                       })
                     }
                   />
-                </DataTable.TableCell>
-              </DataTable.TableRow>
-            )}
-          />
-        </DataTable.Table>
-      </div>
+                  <StickyNote
+                    size={12}
+                    className="absolute left-2 top-2.5 opacity-0 group-hover:opacity-30 pointer-events-none transition-opacity"
+                  />
+                </div>
+              </DataTable.TableCell>
+            </DataTable.TableRow>
+          )}
+        />
+      </DataTable.Table>
 
-      {/* Footer count summary */}
       <DataTable.ResultsCount
-        filteredCount={filteredSponsorships.length}
-        totalCount={sponsorships?.length || 0}
-        label="كفالة"
+        count={filteredSponsorships.length}
+        total={sponsorships?.length || 0}
       />
     </>
   );
 }
 
-// 5. Main Component Wrapper
 export default function SponsorshipsTable() {
   return (
     <DataTable.Root>

@@ -27,19 +27,13 @@ export default function SponsorModal({
   const isEditMode = Boolean(editData);
   const { data: orphans } = useOrphanLookup();
 
-  /* ================= ADD ================= */
   const { addSponsorMutate, isPending: isAddPending } = useAddSponsors();
-
-  /* ================= UPDATE ================= */
   const { updateSponsorMutate, isPending: isUpdatePending } =
     useUpdateSponsors();
 
   const isPending = isAddPending || isUpdatePending;
-
-  // ✅ Generate a unique key to force form remount when editData changes
   const modalKey = editData?.id ? `edit-${editData.id}` : "create-new";
 
-  /* ================= DEFAULT VALUES ================= */
   const defaultValues: Partial<SponsorFormData> = editData
     ? {
         orphanId: editData.orphanId ?? null,
@@ -56,9 +50,7 @@ export default function SponsorModal({
         sponsorshipCount: "0",
       };
 
-  /* ================= SUBMIT ================= */
   const handleSubmit = (data: SponsorFormData) => {
-    // Convert form data -> API payload
     const payload: SponsorPayload = {
       orphanId: data.orphanId,
       name: data.fullName,
@@ -68,29 +60,19 @@ export default function SponsorModal({
       sponsorshipCount: data.sponsorshipCount,
       status: data.status,
     };
+
+    const mutationOptions = {
+      onSuccess: () => {
+        setIsModel(false);
+        onCompleted?.();
+      },
+      onError: (err: any) => console.error("Mutation failed:", err),
+    };
+
     if (isEditMode && editData) {
-      updateSponsorMutate(
-        { id: editData.id, ...payload },
-        {
-          onSuccess: () => {
-            setIsModel(false);
-            onCompleted?.();
-          },
-          onError: (error) => {
-            console.error("Update failed:", error);
-          },
-        },
-      );
+      updateSponsorMutate({ id: editData.id, ...payload }, mutationOptions);
     } else {
-      addSponsorMutate(payload as any, {
-        onSuccess: () => {
-          setIsModel(false);
-          onCompleted?.();
-        },
-        onError: (error) => {
-          console.error("Add failed:", error);
-        },
-      });
+      addSponsorMutate(payload as any, mutationOptions);
     }
   };
 
@@ -102,22 +84,24 @@ export default function SponsorModal({
       isPending={isPending}
       defaultValues={defaultValues}
       mode={isEditMode ? "edit" : "create"}
-      editId={editData?.id}
     >
       <Modal.Header title="إضافة كفيل جديد" editTitle="تعديل بيانات الكفيل" />
 
       <Modal.Body>
-        <Modal.Grid cols={2}>
-          <Modal.Input
+        <Modal.Grid>
+          {/* Section: Basic Info */}
+          <Modal.Input<SponsorFormData>
             name="fullName"
             label="الاسم الكامل *"
+            placeholder="اسم الكفيل الثلاثي"
             validation={{ required: "الاسم مطلوب" }}
           />
 
-          <Modal.Input
+          <Modal.Input<SponsorFormData>
             name="phone"
             label="رقم الهاتف *"
             type="tel"
+            placeholder="07XXXXXXXX"
             validation={{
               required: "رقم الهاتف مطلوب",
               pattern: {
@@ -127,17 +111,18 @@ export default function SponsorModal({
             }}
           />
 
-          <Modal.Input
+          <Modal.Input<SponsorFormData>
             name="email"
             label="البريد الإلكتروني"
             type="email"
+            placeholder="example@mail.com"
             span={2}
           />
 
-          <Modal.Select
+          {/* Section: Sponsorship Details */}
+          <Modal.Select<SponsorFormData>
             name="sponsorshipType"
             label="نوع الكفالة"
-            span={2}
             options={[
               { value: "كفالة كاملة", label: "كفالة كاملة" },
               { value: "كفالة جزئية", label: "كفالة جزئية" },
@@ -147,15 +132,19 @@ export default function SponsorModal({
             placeholder="اختر نوع الكفالة"
           />
 
-          <Modal.Input
+          <Modal.Input<SponsorFormData>
             name="sponsorshipCount"
             label="عدد الكفالات"
             type="number"
+            validation={{
+              min: { value: 0, message: "لا يمكن أن يكون أقل من 0" },
+            }}
           />
 
-          <Modal.Select
+          {/* Section: Assignment & Status */}
+          <Modal.Select<SponsorFormData>
             name="orphanId"
-            label="اختيار يتيم"
+            label="تعيين يتيم *"
             span={2}
             options={
               orphans?.map((orphan: any) => ({
@@ -163,11 +152,12 @@ export default function SponsorModal({
                 label: orphan.name,
               })) || []
             }
-            placeholder="يرجى أختيار يتيم ..."
+            placeholder="ابحث عن اسم اليتيم لربطه بالكفيل..."
           />
-          <Modal.Select
+
+          <Modal.Select<SponsorFormData>
             name="status"
-            label="الحالة"
+            label="حالة الحساب"
             span={2}
             options={[
               { value: "نشط", label: "نشط" },
@@ -176,7 +166,7 @@ export default function SponsorModal({
           />
         </Modal.Grid>
 
-        <Modal.Footer />
+        <Modal.Footer submitText="حفظ الكفيل" />
       </Modal.Body>
     </Modal.Root>
   );

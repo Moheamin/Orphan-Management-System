@@ -9,55 +9,89 @@ export default function CheckPopup({
 }) {
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
+      className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
       onClick={onCancel}
+      style={{
+        backgroundColor: "rgba(22, 31, 44, 0.5)",
+      }}
     >
       <div
-        className="bg-[var(--fillColor)] rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-slideUp"
+        className="rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden animate-slideUp border"
         onClick={(e) => e.stopPropagation()}
         dir="rtl"
+        style={{
+          backgroundColor: "var(--fillColor)",
+          borderColor: "var(--borderColor)",
+        }}
       >
         {/* Header with Icon */}
-        <div className="bg-gradient-to-br from-red-50 to-red-100 px-6 pt-6 pb-4 relative">
+        <div className="px-8 pt-8 pb-6 flex flex-col items-center gap-4 relative bg-[var(--errorColor)]/20">
           <button
             onClick={onCancel}
-            className="absolute left-4 top-4 text-[var(--cellTextColor)] hover:text-[var(--borderColor)]/40 transition-colors"
+            className="absolute left-6 top-6 transition-all hover:opacity-60"
+            style={{ color: "var(--textMuted2)" }}
           >
             <X size={20} />
           </button>
 
-          <div className="flex flex-col items-center">
-            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-3">
-              <AlertTriangle size={32} className="text-red-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900">تأكيد الحذف</h3>
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center border-2"
+            style={{
+              borderColor: "var(--errorColor)",
+            }}
+          >
+            <AlertTriangle size={28} style={{ color: "var(--errorColor)" }} />
           </div>
+          <h2
+            className="text-lg font-bold text-center"
+            style={{ color: "var(--textColor)" }}
+          >
+            تأكيد الحذف
+          </h2>
         </div>
 
         {/* Content */}
-        <div className="px-6 py-6">
-          <p className="text-center text-[var(--textMuted2)] text-base leading-relaxed">
+        <div
+          className="px-8 py-6 border-t"
+          style={{ borderColor: "var(--borderColor)" }}
+        >
+          <p
+            className="text-center text-sm leading-relaxed"
+            style={{ color: "var(--cellTextColor)" }}
+          >
             هل أنت متأكد من حذف هذا العنصر؟
-            <br />
-            <span className="text-sm text-[var(--textMuted2)]/40 mt-2 inline-block">
-              لا يمكن التراجع عن هذا الإجراء
-            </span>
+          </p>
+          <p
+            className="text-center text-xs mt-3"
+            style={{ color: "var(--textMuted2)" }}
+          >
+            لا يمكن التراجع عن هذا الإجراء
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="px-6 pb-6 flex gap-3">
-          <button
-            onClick={onClick}
-            className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-          >
-            حذف
-          </button>
+        <div
+          className="px-8 pb-6 flex gap-3 border-t"
+          style={{ borderColor: "var(--borderColor)" }}
+        >
           <button
             onClick={onCancel}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl border border-gray-200 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+            className="flex-1 font-semibold py-3 px-6 rounded-lg border-2 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              borderColor: "var(--borderColor)",
+              color: "var(--textColor)",
+            }}
           >
             إلغاء
+          </button>
+          <button
+            onClick={onClick}
+            className="flex-1 font-semibold py-3 px-6 rounded-lg text-white transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              backgroundColor: "var(--errorColor)",
+            }}
+          >
+            حذف
           </button>
         </div>
       </div>
@@ -75,7 +109,7 @@ export default function CheckPopup({
         @keyframes slideUp {
           from {
             opacity: 0;
-            transform: translateY(20px) scale(0.95);
+            transform: translateY(25px) scale(0.93);
           }
           to {
             opacity: 1;
@@ -84,11 +118,11 @@ export default function CheckPopup({
         }
 
         .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
+          animation: fadeIn 0.25s ease-out;
         }
 
         .animate-slideUp {
-          animation: slideUp 0.3s ease-out;
+          animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
       `}</style>
     </div>

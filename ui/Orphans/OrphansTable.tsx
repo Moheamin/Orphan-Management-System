@@ -1,23 +1,44 @@
 import { useMemo } from "react";
-import { SquarePen, X } from "lucide-react";
+import { SquarePen, Trash2 } from "lucide-react";
 import { useGetOrphans } from "../../utils/ReactQuerry/Orphans/useGetOrphans";
 import { useDeleteOrphans } from "../../utils/ReactQuerry/Orphans/useDeleteOrphans";
 import OrphanModal from "./OrphanModal";
 import CheckPopup from "../checkPopup";
 import { DataTable } from "../../components/CompoundTable";
 
-// Priority color function (reversed: 0 = green, 100 = red)
+// Priority color function
 const getPriorityColor = (value?: number | string) => {
   const v = Math.min(Math.max(Number(value) || 0, 0), 100);
   const hue = Math.round(120 - (v / 100) * 120);
   return `hsl(${hue} 72% 38%)`;
 };
 
+// Define Orphan Type
+interface Orphan {
+  id: number;
+  name: string;
+  age: number;
+  type: string;
+  residence: string;
+  priority: number;
+  is_sponsored: boolean;
+}
+
+// 1. Define Filter Options
+const FILTER_OPTIONS = [
+  { label: "مكفول", value: "sponsored" },
+  { label: "غير مكفول", value: "unsponsored" },
+  { label: "أولوية عالية (>60%)", value: "high_priority" },
+];
+
 function OrphansTableContent() {
   const { data, error, isLoading } = useGetOrphans();
   const { deleteOrphanMutate } = useDeleteOrphans();
+
+  // 2. Destructure filterValue from context
   const {
     searchQuery,
+    filterValue, // <--- Get the filter value
     deleteConfirm,
     setDeleteConfirm,
     setIsModalOpen,
@@ -25,50 +46,58 @@ function OrphansTableContent() {
     setEditItem,
   } = DataTable.useContext();
 
-  const orphans = data?.orphan || [];
+  const orphans: Orphan[] = data?.orphan || [];
 
+  // 3. Update Filtering Logic
   const filteredOrphans = useMemo(() => {
-    if (!searchQuery.trim()) return orphans;
+    let result = orphans;
 
-    const query = searchQuery.toLowerCase();
-    return orphans.filter(
-      (orphan: any) =>
-        orphan?.name?.toLowerCase().includes(query) ||
-        orphan?.phone?.toLowerCase().includes(query) ||
-        orphan?.email?.toLowerCase().includes(query),
-    );
-  }, [orphans, searchQuery]);
+    // A. Apply Search
+    const query = searchQuery.trim().toLowerCase();
+    if (query) {
+      result = result.filter(
+        (orphan) =>
+          orphan.name?.toLowerCase().includes(query) ||
+          orphan.type?.toLowerCase().includes(query),
+      );
+    }
 
-  function handleDelete(orphanId: number) {
+    // B. Apply Dropdown Filter
+    if (filterValue && filterValue !== "all") {
+      switch (filterValue) {
+        case "sponsored":
+          result = result.filter((o) => o.is_sponsored === true);
+          break;
+        case "unsponsored":
+          result = result.filter((o) => o.is_sponsored === false);
+          break;
+        case "high_priority":
+          result = result.filter((o) => o.priority > 60);
+          break;
+        default:
+          break;
+      }
+    }
+
+    return result;
+  }, [orphans, searchQuery, filterValue]); // Add filterValue dependency
+
+  const handleDelete = (orphanId: number) => {
     deleteOrphanMutate(orphanId, {
-      onSuccess: () => {
-        setDeleteConfirm(null);
-      },
-      onError: (error) => {
-        console.error("Failed to delete orphan:", error);
-        setDeleteConfirm(null);
-      },
+      onSuccess: () => setDeleteConfirm(null),
+      onError: () => setDeleteConfirm(null),
     });
-  }
-
-  function handleEdit(orphan: any) {
-    setEditItem(orphan);
-    setIsModalOpen(true);
-  }
+  };
 
   if (isLoading) return <DataTable.Loading />;
-  if (error) return <DataTable.Error />;
+  if (error) return <DataTable.Error message="حدث خطأ عند تحميل البيانات" />;
 
   return (
     <>
-      {/* Modal rendered when isModalOpen is true */}
       <DataTable.ModalWrapper>
         <OrphanModal
-          setIsModel={(value) =>
-            setIsModalOpen(typeof value === "function" ? value(false) : value)
-          }
+          setIsModel={(val) => setIsModalOpen(!!val)}
           onSuccess={() => {
-            console.log("Orphan saved successfully!");
             setEditItem(null);
             setIsModalOpen(false);
           }}
@@ -76,7 +105,6 @@ function OrphansTableContent() {
         />
       </DataTable.ModalWrapper>
 
-      {/* Delete Confirmation Popup */}
       {deleteConfirm !== null && (
         <CheckPopup
           onClick={() => handleDelete(deleteConfirm as number)}
@@ -86,107 +114,125 @@ function OrphansTableContent() {
 
       <DataTable.Header>
         <DataTable.SearchInput placeholder="البحث عن يتيم..." />
+
+        {/* 4. Add the Filter Component */}
+        <DataTable.Filter label="تصفية حسب الحالة" options={FILTER_OPTIONS} />
+
         <DataTable.AddButton label="يتيم" />
       </DataTable.Header>
 
       <DataTable.Table>
         <DataTable.TableHead>
-          <tr>
+          <DataTable.TableRow>
             <DataTable.TableHeaderCell>الاسم</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>العمر</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>نوع اليتيم</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>السكن</DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="hidden md:table-cell">
+              العمر
+            </DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="hidden lg:table-cell">
+              السكن
+            </DataTable.TableHeaderCell>
             <DataTable.TableHeaderCell>الأولوية</DataTable.TableHeaderCell>
             <DataTable.TableHeaderCell>حالة الكفالة</DataTable.TableHeaderCell>
             <DataTable.TableHeaderCell>الإجراءات</DataTable.TableHeaderCell>
-          </tr>
+          </DataTable.TableRow>
         </DataTable.TableHead>
 
         <DataTable.TableBody
           data={filteredOrphans}
-          emptyMessage="لا توجد بيانات"
-          renderRow={(orphan: any) => {
-            const progress = Math.min(Number(orphan?.priority) || 0, 100);
-
-            return (
-              <DataTable.TableRow
-                key={orphan?.id ?? `${orphan?.name}-${orphan?.age}`}
-              >
-                <DataTable.TableCell className="text-right font-medium text-[var(--cellTextColor)]">
-                  {orphan?.name}
-                </DataTable.TableCell>
-
-                <DataTable.TableCell className="text-[var(--cellTextColor)]">
-                  {orphan?.age} سنة
-                </DataTable.TableCell>
-
-                <DataTable.TableCell className="text-[var(--cellTextColor)]">
-                  {orphan?.type}
-                </DataTable.TableCell>
-
-                <DataTable.TableCell className="text-[var(--cellTextColor)]">
-                  {orphan?.residence}
-                </DataTable.TableCell>
-
-                <DataTable.TableCell>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-[var(--cellTextColor)]">
-                      {orphan?.priority}
-                    </span>
-                    <div className="h-1.5 w-24 rounded-full bg-[var(--borderColor)]">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${progress}%`,
-                          backgroundColor: getPriorityColor(progress),
-                        }}
-                      />
-                    </div>
-                  </div>
-                </DataTable.TableCell>
-
-                <DataTable.TableCell>
-                  <span
-                    className={`inline-flex items-center justify-center rounded-full px-4 py-1 text-xs font-medium ${
-                      orphan?.is_sponsored
-                        ? "bg-[var(--primeColor)] text-white"
-                        : "bg-[var(--fillColor)] text-[var(--primeColor)] border border-emerald-200"
-                    }`}
-                  >
-                    {orphan?.is_sponsored ? "مكفول" : "غير مكفول"}
+          // Pass a custom empty message based on filter
+          emptyMessage={
+            filterValue !== "all"
+              ? "لا توجد نتائج لهذا الفلتر"
+              : "لا توجد بيانات"
+          }
+          renderRow={(orphan: Orphan) => (
+            <DataTable.TableRow key={orphan.id}>
+              {/* Name & Type Column */}
+              <DataTable.TableCell>
+                <div className="flex flex-col">
+                  <span className="font-bold text-[var(--textColor)]">
+                    {orphan.name}
                   </span>
-                </DataTable.TableCell>
+                  <span className="text-xs text-[var(--textMuted)] md:hidden">
+                    {orphan.type}
+                  </span>
+                </div>
+              </DataTable.TableCell>
 
-                <DataTable.TableCell>
-                  <div className="flex items-center justify-start gap-3">
-                    <button
-                      onClick={() => handleEdit(orphan)}
-                      title="تعديل"
-                      className="text-[var(--textMuted)] hover:text-[var(--primeColor)] transition"
-                    >
-                      <SquarePen size={16} />
-                    </button>
-                    <button onClick={() => setDeleteConfirm(orphan?.id)}>
-                      <X size={16} color="#be1010" className="cursor-pointer" />
-                    </button>
+              {/* Age */}
+              <DataTable.TableCell className="hidden md:table-cell">
+                {orphan.age} سنة
+              </DataTable.TableCell>
+
+              {/* Residence */}
+              <DataTable.TableCell className="hidden lg:table-cell">
+                {orphan.residence}
+              </DataTable.TableCell>
+
+              {/* Priority Bar */}
+              <DataTable.TableCell>
+                <div className="flex items-center gap-2 min-w-[80px]">
+                  <div className="h-2 w-12 md:w-20 rounded-full bg-[var(--borderColor)]/30 overflow-hidden">
+                    <div
+                      className="h-full transition-all duration-500"
+                      style={{
+                        width: `${orphan.priority}%`,
+                        backgroundColor: getPriorityColor(orphan.priority),
+                      }}
+                    />
                   </div>
-                </DataTable.TableCell>
-              </DataTable.TableRow>
-            );
-          }}
+                  <span className="text-[10px] font-bold">
+                    {orphan.priority}%
+                  </span>
+                </div>
+              </DataTable.TableCell>
+
+              {/* Sponsorship Status */}
+              <DataTable.TableCell>
+                <span
+                  className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                    orphan.is_sponsored
+                      ? "bg-[var(--borderColor)]/80 text-[var(--primeColor)] outline border-[var(--primeColor)]"
+                      : "bg-[var(--borderColor)]/80 text-[var(--errorColor)] outline border-[var(--errorColor)]"
+                  }`}
+                >
+                  {orphan.is_sponsored ? "مكفول" : "غير مكفول"}
+                </span>
+              </DataTable.TableCell>
+
+              {/* Actions */}
+              <DataTable.TableCell>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => {
+                      setEditItem(orphan);
+                      setIsModalOpen(true);
+                    }}
+                    className="p-2 text-[var(--primeColor)] hover:bg-[var(--borderColor)] rounded-lg transition-colors"
+                  >
+                    <SquarePen size={18} />
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(orphan.id)}
+                    className="p-2 text-[var(--errorColor)] hover:bg-[var(--borderColor)] rounded-lg transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </DataTable.TableCell>
+            </DataTable.TableRow>
+          )}
         />
       </DataTable.Table>
 
       <DataTable.ResultsCount
-        filteredCount={filteredOrphans.length}
-        totalCount={orphans.length}
-        label="يتيم"
+        count={filteredOrphans.length}
+        total={orphans.length}
       />
     </>
   );
 }
 
-// Main export with Root provider
 export default function OrphansTable() {
   return (
     <DataTable.Root>

@@ -1,5 +1,5 @@
 import "../src/index.css";
-import SponserShipTabe from "../ui/SponserShips/SponserShipTable";
+import SponserShipTable from "../ui/SponserShips/SponserShipTable";
 
 function SponserShips() {
   return (
@@ -11,7 +11,7 @@ function SponserShips() {
             عرض معلومات الأيتام و الكفلاء
           </p>
         </div>
-        <SponserShipTabe />
+        <SponserShipTable />
       </div>
     </>
   );

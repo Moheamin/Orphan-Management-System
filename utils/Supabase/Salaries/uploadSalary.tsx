@@ -6,7 +6,7 @@ export async function addSalary(salaryData: {
   status: string;
 }) {
   const { data: salary, error } = await supabase()
-    .from("salary") // ✅ Make sure table name matches your database
+    .from("sponnsor_payment") // ✅ Make sure table name matches your database
     .insert({ salaryData })
     .select();
 
