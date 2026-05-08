@@ -5,7 +5,7 @@ import { LogIn, LogOut, User2, Shield, ChevronDown } from "lucide-react";
 import "../src/index.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthUser, type AppRole } from "../utils/Supabase/Auth/useAuthUser";
-import { signOut } from "../utils/Supabase/Auth/singout";
+import { signOut } from "../utils/Supabase/Auth/signout.tsx";
 import { useState, useRef, useEffect } from "react";
 
 const roleLabels: Record<AppRole, string> = {
@@ -84,7 +84,7 @@ export default function Header({
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   whileHover={{ scale: 1.02 }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--primeColor)] text-white font-bold text-sm shadow-sm hover:shadow-md transition-all duration-200"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--primeColor)] text-white font-bold text-sm shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer !cursor-pointer"
                 >
                   <LogIn className="w-4 h-4" />
                   <span className="hidden sm:inline">تسجيل الدخول</span>
@@ -97,7 +97,7 @@ export default function Header({
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-[var(--fillColor)] border border-[var(--borderColor)] hover:border-[var(--primeColor)]/40 transition-all duration-200 cursor-pointer"
+                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-[var(--fillColor)] border border-[var(--borderColor)] hover:border-[var(--primeColor)]/40 transition-all duration-200 cursor-pointer !cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--primeColor)] to-emerald-400 flex items-center justify-center shadow-sm">
                     <User2 className="w-4 h-4 text-white" />

@@ -29,7 +29,7 @@ export async function updateSponsorFull(payload: {
 
   if (sErr) throw sErr;
 
-  // 2. Find all sibling rows (same person)
+  // 2. Find all sibling rows (same person = same name + phone)
   const { data: siblings, error: sibErr } = await client
     .from("sponsor")
     .select("id, orphan_id, created_at")
@@ -44,7 +44,7 @@ export async function updateSponsorFull(payload: {
     .map((s: any) => s.orphan_id)
     .filter(Boolean) as string[];
 
-  // 3. Determine added/removed orphans
+  // 3. Determine added / removed orphans
   const addedOrphanIds = orphanIds.filter(
     (oid) => !currentOrphanIds.includes(oid),
   );
@@ -61,17 +61,18 @@ export async function updateSponsorFull(payload: {
     if (uErr) throw uErr;
   }
 
-  // 5. Remove rows for removed orphans (soft-delete) + log to sponsorship history
+  // 5. Soft-delete rows for removed orphans + log to sponsorship history
   for (const orphanId of removedOrphanIds) {
     const removedRow = (siblings || []).find(
       (s: any) => s.orphan_id === orphanId,
     );
     if (removedRow) {
       // Soft-delete the sponsor row
-      await client
+      const { error: delErr } = await client
         .from("sponsor")
         .update({ is_deleted: true })
         .eq("id", removedRow.id);
+      if (delErr) throw delErr;
 
       // Log to sponsorship table as historical record
       const { error: histErr } = await client.from("sponsorship").insert({
@@ -113,11 +114,8 @@ export async function updateSponsorFull(payload: {
     if (insErr) throw insErr;
   }
 
-  // 7. Handle case: if all orphans removed but sponsor should still exist (no orphans)
-  // If orphanIds is empty and we removed all, keep one row with orphan_id = null
+  // 7. If all orphans removed, keep one clean row with orphan_id = null
   if (orphanIds.length === 0 && currentOrphanIds.length > 0) {
-    // All orphans removed — at least one sibling was soft-deleted above.
-    // Insert a clean row with no orphan.
     const baseData = {
       name: updateFields.name || thisSponsor.name,
       phone: updateFields.phone || thisSponsor.phone,
@@ -130,30 +128,35 @@ export async function updateSponsorFull(payload: {
       is_deleted: false,
       orphan_id: null,
     };
-    await client.from("sponsor").insert(baseData);
+    const { error: cleanErr } = await client.from("sponsor").insert(baseData);
+    if (cleanErr) throw cleanErr;
   }
 
-  // 8. Update orphan is_sponsored flags
-  for (const orphanId of addedOrphanIds) {
-    await client
+  // 8a. Mark added orphans as sponsored (batch)
+  if (addedOrphanIds.length > 0) {
+    const { error: addErr } = await client
       .from("orphan")
       .update({ is_sponsored: true })
-      .eq("id", orphanId);
+      .in("id", addedOrphanIds);
+    if (addErr) throw addErr;
   }
+
+  // 8b. Unmark removed orphans ONLY if no other active sponsor remains
   for (const orphanId of removedOrphanIds) {
-    // Check if this orphan still has any other active sponsor
     const { data: remaining } = await client
       .from("sponsor")
       .select("id")
       .eq("orphan_id", orphanId)
       .eq("is_deleted", false)
+      .eq("status", "نشط")
       .limit(1);
 
     if (!remaining || remaining.length === 0) {
-      await client
+      const { error: remErr } = await client
         .from("orphan")
         .update({ is_sponsored: false })
         .eq("id", orphanId);
+      if (remErr) throw remErr;
     }
   }
 

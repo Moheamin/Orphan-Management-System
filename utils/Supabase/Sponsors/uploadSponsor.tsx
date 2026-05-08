@@ -35,12 +35,13 @@ export async function addSponsor(
 
   if (error) throw error;
 
-  // Mark assigned orphans as sponsored
-  for (const orphanId of orphanIds) {
-    await client
+  // Mark all assigned orphans as sponsored in a single batch call
+  if (orphanIds.length > 0) {
+    const { error: orphanErr } = await client
       .from("orphan")
       .update({ is_sponsored: true })
-      .eq("id", orphanId);
+      .in("id", orphanIds);
+    if (orphanErr) throw orphanErr;
   }
 
   // Generate/update sponsor_payment for current month

@@ -4,6 +4,7 @@ import Card from "../components/Card";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useGetOrphans } from "../utils/ReactQuerry/Orphans/useGetOrphans";
 import { useSponsorStats } from "../utils/ReactQuerry/Sponsers/utils";
+import { useGetSponsors } from "../utils/ReactQuerry/Sponsers/useGetSponsors";
 import { useGetSponsorships } from "../utils/ReactQuerry/Sponsorships/useGetSponsorships";
 import { useGetSponsorPayments } from "../utils/ReactQuerry/SponsorPayments/useGetSponsorPayments";
 import { useGetUsers } from "../utils/ReactQuerry/Users/useGetUsers";
@@ -23,6 +24,8 @@ import {
 function Overview() {
   const { data: orphansData, isLoading: orphansLoading } = useGetOrphans();
   const { data: sponsorStats, isLoading: sponsorsLoading } = useSponsorStats();
+  const { data: sponsorsData, isLoading: sponsorsListLoading } =
+    useGetSponsors();
   const { data: sponsorships, isLoading: sponsorshipsLoading } =
     useGetSponsorships();
   const { data: payments, isLoading: paymentsLoading } =
@@ -35,6 +38,25 @@ function Overview() {
   const totalSponsorships = sponsorStats?.totalSponsorships ?? 0;
   const totalPayments =
     payments?.reduce((sum: any, p: any) => sum + (p.paid_amount ?? 0), 0) ?? 0;
+
+  // Helper to count items created this month
+  function countCreatedThisMonth(items: any[]) {
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
+    return items.filter((item) => {
+      if (!item.created_at) return false;
+      const d = new Date(item.created_at);
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+    }).length;
+  }
+
+  const newOrphansThisMonth = countCreatedThisMonth(orphansData?.orphan || []);
+  // Use actual sponsor list to count new sponsors this month
+  const newSponsorsThisMonth = sponsorsData?.sponsor
+    ? countCreatedThisMonth(sponsorsData.sponsor)
+    : 0;
+  const newSponsorshipsThisMonth = countCreatedThisMonth(sponsorships || []);
 
   // Urgent cases: orphans with high priority (e.g., >= 80)
   const urgentCases = (orphansData?.orphan || []).filter(
@@ -68,12 +90,12 @@ function Overview() {
     }
   };
 
-  // Pie chart: aggregate real sponsorship types
+  // Pie chart: aggregate real sponsorship types (from sponsor table)
   const sponsorshipTypes = React.useMemo(() => {
     if (!sponsorships || !Array.isArray(sponsorships)) return [];
     const typeMap: Record<string, number> = {};
     sponsorships.forEach((s: any) => {
-      const type = s.type || "غير محدد";
+      const type = s.sponsorship_type || "غير محدد";
       typeMap[type] = (typeMap[type] || 0) + 1;
     });
     return Object.entries(typeMap).map(([name, value]) => ({ name, value }));
@@ -99,10 +121,10 @@ function Overview() {
       const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
       orphanCounts[key] = (orphanCounts[key] || 0) + 1;
     });
-    // Count sponsors per month (if available)
+    // Count sponsors per month using actual sponsor list
     let sponsorCounts: Record<string, number> = {};
-    if (Array.isArray((sponsorStats as any)?.sponsors)) {
-      (sponsorStats as any).sponsors.forEach((s: any) => {
+    if (Array.isArray(sponsorsData?.sponsor)) {
+      sponsorsData.sponsor.forEach((s: any) => {
         if (!s.created_at) return;
         const d = new Date(s.created_at);
         const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
@@ -123,6 +145,7 @@ function Overview() {
   const loading =
     orphansLoading ||
     sponsorsLoading ||
+    sponsorsListLoading ||
     sponsorshipsLoading ||
     paymentsLoading ||
     usersLoading;
@@ -166,7 +189,7 @@ function Overview() {
                     {totalSponsorships}
                   </span>
                   <span className="text-xs text-[var(--textMuted2)]">
-                    +15 هذا الشهر
+                    +{newSponsorshipsThisMonth} هذا الشهر
                   </span>
                 </div>
               </div>
@@ -184,7 +207,7 @@ function Overview() {
                     {totalSponsors}
                   </span>
                   <span className="text-xs text-[var(--textMuted2)]">
-                    +8 هذا الشهر
+                    +{newSponsorsThisMonth} هذا الشهر
                   </span>
                 </div>
               </div>
@@ -202,7 +225,7 @@ function Overview() {
                     {totalOrphans}
                   </span>
                   <span className="text-xs text-[var(--textMuted2)]">
-                    +12 هذا الشهر
+                    +{newOrphansThisMonth} هذا الشهر
                   </span>
                 </div>
               </div>
@@ -235,6 +258,43 @@ function Overview() {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
+              {/* Detailed breakdown table */}
+              <div className="mt-4">
+                {sponsorshipTypes.length === 0 ? (
+                  <div className="text-center text-sm text-[var(--textMuted)] py-4">
+                    لا توجد كفالات حالياً.
+                  </div>
+                ) : (
+                  <table className="w-full text-xs text-right border-t mt-2">
+                    <thead>
+                      <tr className="text-[var(--primeColor)] border-b">
+                        <th className="py-1">نوع الكفالة</th>
+                        <th className="py-1">العدد</th>
+                        <th className="py-1">النسبة</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sponsorshipTypes.map((row, idx) => {
+                        const percent = Math.round(
+                          (row.value / (sponsorships?.length || 1)) * 100,
+                        );
+                        return (
+                          <tr
+                            key={row.name}
+                            className={
+                              idx % 2 === 0 ? "bg-[var(--fillColor)]" : ""
+                            }
+                          >
+                            <td className="py-1 font-bold">{row.name}</td>
+                            <td className="py-1">{row.value}</td>
+                            <td className="py-1">{percent}%</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
             <div className="bg-[var(--backgroundColor)] rounded-2xl shadow-[var(--cardShadow)] border border-[var(--borderColor)] p-5">
               <h2 className="text-sm font-bold mb-3 text-[var(--primeColor)]">
@@ -289,36 +349,26 @@ function Overview() {
                   </svg>
                 </span>
               </div>
-              {/* Urgent (high) priority cases */}
-              {[...urgentCases, ...mediumCases].length === 0 ? (
-                <div className="text-center text-sm text-[var(--textMuted)] py-6">
-                  لا توجد حالات عاجلة حالياً
-                </div>
-              ) : (
-                [...urgentCases, ...mediumCases].map(
-                  (orphan: any, _idx: number) => (
-                    <div
-                      key={orphan.id}
-                      className="flex flex-col sm:flex-row-reverse sm:items-center sm:justify-between gap-2 bg-[var(--fillColor)] rounded-xl p-4 border border-[var(--borderColor)]/40"
-                    >
-                      <div className="flex flex-row-reverse items-center justify-between sm:justify-end gap-3">
-                        {getPriorityBadge(orphan.priority)}
-                        <div className="flex flex-col items-end gap-0.5 text-right sm:hidden">
-                          <span className="font-bold text-sm text-[var(--textColor)]">
-                            {orphan.name}{" "}
-                            <span className="text-[var(--textMuted)] text-xs font-normal">
-                              ({orphan.age} سنة)
-                            </span>
-                          </span>
-                          <span className="text-xs text-[var(--textMuted)]">
-                            {orphan.type ||
-                              orphan.description ||
-                              orphan.residence ||
-                              "—"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="hidden sm:flex flex-col items-end gap-0.5 text-right">
+              {/* Urgent (high) priority cases, sorted by priority descending */}
+              {(() => {
+                const sortedCases = [...urgentCases, ...mediumCases].sort(
+                  (a, b) => b.priority - a.priority,
+                );
+                if (sortedCases.length === 0) {
+                  return (
+                    <div className="text-center text-sm text-[var(--textMuted)] py-6">
+                      لا توجد حالات عاجلة حالياً
+                    </div>
+                  );
+                }
+                return sortedCases.map((orphan: any, _idx: number) => (
+                  <div
+                    key={orphan.id}
+                    className="flex flex-col sm:flex-row-reverse sm:items-center sm:justify-between gap-2 bg-[var(--fillColor)] rounded-xl p-4 border border-[var(--borderColor)]/40"
+                  >
+                    <div className="flex flex-row-reverse items-center justify-between sm:justify-end gap-3">
+                      {getPriorityBadge(orphan.priority)}
+                      <div className="flex flex-col items-end gap-0.5 text-right sm:hidden">
                         <span className="font-bold text-sm text-[var(--textColor)]">
                           {orphan.name}{" "}
                           <span className="text-[var(--textMuted)] text-xs font-normal">
@@ -333,9 +383,23 @@ function Overview() {
                         </span>
                       </div>
                     </div>
-                  ),
-                )
-              )}
+                    <div className="hidden sm:flex flex-col items-end gap-0.5 text-right">
+                      <span className="font-bold text-sm text-[var(--textColor)]">
+                        {orphan.name}{" "}
+                        <span className="text-[var(--textMuted)] text-xs font-normal">
+                          ({orphan.age} سنة)
+                        </span>
+                      </span>
+                      <span className="text-xs text-[var(--textMuted)]">
+                        {orphan.type ||
+                          orphan.description ||
+                          orphan.residence ||
+                          "—"}
+                      </span>
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         </>

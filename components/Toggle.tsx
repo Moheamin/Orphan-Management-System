@@ -16,7 +16,8 @@ const Toggle: React.FC<ToggleProps> = ({
 }) => {
   return (
     <label
-      className={`inline-flex items-center cursor-pointer ${className || ""}`}
+      className={`inline-flex items-center cursor-pointer !cursor-pointer ${className || ""}`}
+      style={{ cursor: "pointer" }}
     >
       <input
         type="checkbox"

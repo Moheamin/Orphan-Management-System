@@ -1,13 +1,13 @@
 import { supabase } from "../supabase";
 
-const BASE_AMOUNT = 50_000; // Base monthly amount for sponsors with no active sponsorship
+const BASE_AMOUNT = 50_000;
 
 export const fetchSponsorPayments = async () => {
   const client = supabase();
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 
-  // 1. Fetch all active sponsors from the view (includes sponsorship_type + count)
+  // 1. Fetch all active sponsors
   const { data: sponsors, error: sponsorsErr } = await client
     .from("elegant_sponsors_list")
     .select("id, name, phone, sponsorship_type, sponsorship_count")
@@ -26,18 +26,40 @@ export const fetchSponsorPayments = async () => {
     (prices || []).map((p: any) => [p.type_name, Number(p.monthly_cost)]),
   );
 
-  // 3. Helper: compute expected amount for a sponsor
-  // Sponsors with no active sponsorship pay the BASE_AMOUNT
+  // 3. Batch-fetch all active sponsor-orphan links with orphan names
+  const { data: allSponsorLinks } = await client
+    .from("sponsor")
+    .select("id, name, phone, orphan_id, orphan:orphan_id ( id, name )")
+    .eq("is_deleted", false)
+    .not("orphan_id", "is", null);
+
+  // Build maps: "name|phone" => [{ id, name }], and sponsor.id => personKey
+  const orphansByPersonKey = new Map<string, { id: string; name: string }[]>();
+  const sponsorIdToPersonKey = new Map<string, string>();
+
+  for (const link of allSponsorLinks || []) {
+    const key = `${link.name}|${link.phone}`;
+    sponsorIdToPersonKey.set(link.id, key);
+    const orphan = link.orphan as any;
+    if (orphan?.name) {
+      if (!orphansByPersonKey.has(key)) orphansByPersonKey.set(key, []);
+      const list = orphansByPersonKey.get(key)!;
+      if (!list.find((o) => o.id === orphan.id)) {
+        list.push({ id: orphan.id, name: orphan.name });
+      }
+    }
+  }
+
+  for (const s of sponsors || []) {
+    sponsorIdToPersonKey.set(s.id, `${s.name}|${s.phone}`);
+  }
+
+  // 4. Compute expected amounts
   const computeExpected = async (sponsor: any): Promise<number> => {
     if (!sponsor.sponsorship_type) return BASE_AMOUNT;
-
-    // For uniform types, simple: price × count
     const singlePrice = priceMap.get(sponsor.sponsorship_type);
-    if (singlePrice !== undefined) {
+    if (singlePrice !== undefined)
       return singlePrice * (sponsor.sponsorship_count || 1);
-    }
-
-    // For mixed types (e.g. "كفالة متنوعة"), query individual rows
     const { data: rows } = await client
       .from("sponsor")
       .select("sponsorship_type")
@@ -45,25 +67,22 @@ export const fetchSponsorPayments = async () => {
       .eq("phone", sponsor.phone)
       .eq("is_deleted", false)
       .not("orphan_id", "is", null);
-
     const total = (rows || []).reduce(
       (sum: number, r: any) => sum + (priceMap.get(r.sponsorship_type) || 0),
       0,
     );
-    // Fall back to BASE_AMOUNT if no matching prices found
     return total > 0 ? total : BASE_AMOUNT;
   };
 
-  // 4. Precompute expected amounts for all sponsors
   const sponsorExpectedMap = new Map<string, number>();
   for (const s of sponsors || []) {
     sponsorExpectedMap.set(s.id, await computeExpected(s));
   }
 
-  // 5. Check which sponsors already have a current-month payment
+  // 5. Existing current-month payments
   const { data: currentMonthPayments } = await client
     .from("sponsor_payment")
-    .select("id, sponsor_id, expected_amount, sponsor ( name )")
+    .select("id, sponsor_id, sponsor ( name )")
     .eq("payment_target_month", currentMonth);
 
   const paidIds = new Set(
@@ -73,55 +92,40 @@ export const fetchSponsorPayments = async () => {
     (currentMonthPayments || []).map((p: any) => p.sponsor?.name),
   );
 
-  // 6. Create real DB records for sponsors missing a current-month payment
+  // 6. Insert missing payments
+  // ⚠️ DO NOT include extra_charity or remaining_debt — they are GENERATED columns in Postgres
   const missingSponsors = (sponsors || []).filter(
     (s: any) => !paidIds.has(s.id) && !paidNames.has(s.name),
   );
 
   for (const s of missingSponsors) {
     const expectedAmount = sponsorExpectedMap.get(s.id) ?? BASE_AMOUNT;
-
     const { error: insertErr } = await client.from("sponsor_payment").insert({
       sponsor_id: s.id,
       payment_target_month: currentMonth,
       expected_amount: expectedAmount,
       paid_amount: 0,
-      remaining_debt: expectedAmount,
-      extra_charity: 0,
       status: "قيد الانتظار",
       note: "",
+      // ✅ Never set extra_charity or remaining_debt here — Postgres computes them
     });
-
-    if (insertErr) {
+    if (insertErr)
       console.error(
-        `Insert payment failed for ${s.name}:`,
+        `Insert failed for ${s.name}:`,
         insertErr.message,
-        insertErr.details,
         insertErr.code,
       );
-    }
   }
 
-  // Step 7 removed: updating expected_amount individually triggers recursive
-  // database triggers (PostgreSQL error 54001: stack depth limit exceeded).
-
-  // 8. Fetch ALL payment records (including any newly created)
+  // 7. Fetch all payments
   const { data: allPayments, error: fetchErr } = await client
     .from("sponsor_payment")
     .select(
       `
-      id,
-      sponsor_id,
-      payment_target_month,
-      expected_amount,
-      paid_amount,
-      extra_charity,
-      remaining_debt,
-      payment_date,
-      status,
-      note,
-      created_at,
-      sponsor ( name )
+      id, sponsor_id, payment_target_month,
+      expected_amount, paid_amount, extra_charity, remaining_debt,
+      payment_date, status, note, created_at,
+      sponsor ( name, phone )
     `,
     )
     .order("created_at", { ascending: false });
@@ -129,25 +133,27 @@ export const fetchSponsorPayments = async () => {
   if (fetchErr) throw fetchErr;
 
   const flatPayments = (allPayments || []).map((row: any) => {
-    // Always use fresh expected from current sponsorship state (override stale DB value)
     const freshExpected =
       row.sponsor_id && sponsorExpectedMap.has(row.sponsor_id)
         ? sponsorExpectedMap.get(row.sponsor_id)!
         : row.expected_amount;
 
-    // remaining > 0 means surplus (paid more), remaining < 0 means still owes
-    const remaining = (row.paid_amount || 0) - freshExpected;
+    const personKey =
+      sponsorIdToPersonKey.get(row.sponsor_id) ||
+      (row.sponsor?.name && row.sponsor?.phone
+        ? `${row.sponsor.name}|${row.sponsor.phone}`
+        : null);
 
     return {
       ...row,
       expected_amount: freshExpected,
-      remaining,
       sponsor_name: row.sponsor?.name || "—",
       payment_date: row.payment_date ? row.payment_date.split("T")[0] : null,
+      orphans: personKey ? orphansByPersonKey.get(personKey) || [] : [],
     };
   });
 
-  // 9. For any sponsors where INSERT failed, add virtual records as fallback
+  // 8. Virtual fallback
   const finalPaidIds = new Set(
     flatPayments
       .filter((p: any) => p.payment_target_month === currentMonth)
@@ -164,6 +170,7 @@ export const fetchSponsorPayments = async () => {
     (s: any) => !finalPaidIds.has(s.id) && !finalPaidNames.has(s.name),
   )) {
     const expectedAmount = sponsorExpectedMap.get(s.id) ?? BASE_AMOUNT;
+    const personKey = `${s.name}|${s.phone}`;
     virtualRecords.push({
       id: `virtual-${s.id}`,
       sponsor_id: s.id,
@@ -173,11 +180,11 @@ export const fetchSponsorPayments = async () => {
       paid_amount: 0,
       extra_charity: 0,
       remaining_debt: expectedAmount,
-      remaining: -expectedAmount, // 0 paid - expected = negative (owes)
       payment_date: null,
       status: "قيد الانتظار",
       note: "",
       created_at: new Date().toISOString(),
+      orphans: orphansByPersonKey.get(personKey) || [],
       _isVirtual: true,
     });
   }

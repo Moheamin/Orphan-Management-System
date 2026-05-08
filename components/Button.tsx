@@ -24,14 +24,14 @@ function Button({
       onClick={onClick}
       className={`
         inline-flex items-center justify-center 
-        transition-all duration-200 cursor-pointer
+        transition-all duration-200 cursor-pointer !cursor-pointer
         disabled:opacity-50 disabled:cursor-not-allowed
         ${adj}
       `}
       whileTap={{ scale: 0.95 }}
       whileHover={{ scale: disabled ? 1 : 1.04 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      style={{ outline: "none" }}
+      style={{ outline: "none", cursor: "pointer" }}
     >
       {children}
     </motion.button>

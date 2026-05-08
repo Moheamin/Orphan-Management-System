@@ -100,47 +100,27 @@ function OrphanageFundsContent() {
 
   return (
     <>
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-[var(--borderColor)] bg-gradient-to-bl from-[var(--fillColor)] to-[var(--backgroundColor)]">
-          <div className="p-2.5 rounded-xl bg-[var(--primeColor)]/10">
-            <Landmark size={22} className="text-[var(--primeColor)]" />
+      {/* Summary card */}
+      <div className="mb-5">
+        <div className="relative overflow-hidden flex items-center gap-4 p-5 rounded-2xl border border-[var(--borderColor)] bg-gradient-to-bl from-[var(--fillColor)] to-[var(--backgroundColor)]">
+          <div className="absolute -left-4 -bottom-4 opacity-5">
+            <Landmark size={90} />
           </div>
-          <div className="flex flex-col items-end flex-1">
-            <span className="text-[10px] text-[var(--textMuted)]">
+          <div className="p-3 rounded-xl bg-[var(--primeColor)]/10 shrink-0">
+            <Landmark size={24} className="text-[var(--primeColor)]" />
+          </div>
+          <div className="flex flex-col items-end flex-1 gap-0.5">
+            <span className="text-[11px] text-[var(--textMuted)] font-medium">
               إجمالي الصندوق
             </span>
-            <span className="text-lg font-bold text-[var(--textColor)]">
-              {totalFunds.toLocaleString()}{" "}
-              <span className="text-xs font-normal">د.ع</span>
+            <span className="text-2xl font-bold text-[var(--textColor)] tabular-nums">
+              {totalFunds.toLocaleString()}
+              <span className="text-sm font-normal text-[var(--textMuted)] mr-1">
+                د.ع
+              </span>
             </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-[var(--borderColor)] bg-gradient-to-bl from-[var(--fillColor)] to-[var(--backgroundColor)]">
-          <div className="p-2.5 rounded-xl bg-[var(--primeColor)]/10">
-            <ArrowUpRight size={22} className="text-[var(--primeColor)]" />
-          </div>
-          <div className="flex flex-col items-end flex-1">
             <span className="text-[10px] text-[var(--textMuted)]">
-              فائض الدفعات
-            </span>
-            <span className="text-lg font-bold text-[var(--primeColor)]">
-              {surplusTotal.toLocaleString()}{" "}
-              <span className="text-xs font-normal">د.ع</span>
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-[var(--borderColor)] bg-gradient-to-bl from-[var(--fillColor)] to-[var(--backgroundColor)]">
-          <div className="p-2.5 rounded-xl bg-[var(--successColor)]/10">
-            <Banknote size={22} className="text-[var(--successColor)]" />
-          </div>
-          <div className="flex flex-col items-end flex-1">
-            <span className="text-[10px] text-[var(--textMuted)]">
-              التبرعات
-            </span>
-            <span className="text-lg font-bold text-[var(--successColor)]">
-              {donationTotal.toLocaleString()}{" "}
-              <span className="text-xs font-normal">د.ع</span>
+              {records.length} عملية مسجلة
             </span>
           </div>
         </div>

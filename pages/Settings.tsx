@@ -134,7 +134,7 @@ function Settings() {
         <button
           onClick={handleSave}
           disabled={updateSettingsMutation.isPending}
-          className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[var(--primeColor)] text-white font-bold text-sm shadow-sm hover:shadow-md hover:brightness-105 transition-all disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[var(--primeColor)] text-white font-bold text-sm shadow-sm hover:shadow-md hover:brightness-105 transition-all disabled:opacity-50 cursor-pointer !cursor-pointer"
         >
           <Save size={16} />
           {updateSettingsMutation.isPending ? "جاري الحفظ..." : "حفظ"}
@@ -146,7 +146,7 @@ function Settings() {
         {["عام", "الإشعارات", "الأولوية"].map((t) => (
           <button
             key={t}
-            className={`px-5 py-2 rounded-xl text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
+            className={`px-5 py-2 rounded-xl text-xs font-bold transition-all duration-200 whitespace-nowrap cursor-pointer !cursor-pointer ${
               tab === t
                 ? "bg-[var(--primeColor)] text-white shadow-sm"
                 : "bg-[var(--fillColor)] text-[var(--textColor)] hover:bg-[var(--borderColor)]"
@@ -176,7 +176,7 @@ function Settings() {
                     ].map((m) => (
                       <button
                         key={m.value}
-                        className={`flex-1 max-w-[120px] px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        className={`flex-1 max-w-[120px] px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer !cursor-pointer ${
                           theme === m.value
                             ? "bg-[var(--primeColor)] text-white"
                             : "bg-[var(--fillColor)] text-[var(--textColor)] hover:bg-[var(--borderColor)]"
@@ -200,7 +200,7 @@ function Settings() {
                     ].map((fs) => (
                       <button
                         key={fs.value}
-                        className={`flex-1 max-w-[100px] px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        className={`flex-1 max-w-[100px] px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer !cursor-pointer ${
                           fontSize === fs.value
                             ? "bg-[var(--primeColor)] text-white"
                             : "bg-[var(--fillColor)] text-[var(--textColor)] hover:bg-[var(--borderColor)]"
@@ -341,7 +341,7 @@ function Settings() {
             </div>
             <div className="flex gap-2 mt-6 justify-end">
               <button
-                className="px-5 py-2 rounded-xl border border-[var(--borderColor)] text-sm font-bold text-[var(--textColor)] hover:bg-[var(--fillColor)] transition-colors cursor-pointer"
+                className="px-5 py-2 rounded-xl border border-[var(--borderColor)] text-sm font-bold text-[var(--textColor)] hover:bg-[var(--fillColor)] transition-colors cursor-pointer !cursor-pointer"
                 onClick={() =>
                   setCriteria([
                     { label: "يتم الأبوين", value: 40 },
