@@ -142,7 +142,7 @@ const Input = <T extends FieldValues>({
         type={type}
         {...form.register(name as any, validation)}
         placeholder={placeholder}
-        className={`w-full px-3.5 py-2.5 bg-[var(--fillColor)] border ${
+        className={`w-full px-3.5 py-3 sm:py-2.5 bg-[var(--fillColor)] border ${
           error
             ? "border-[var(--errorColor)] ring-1 ring-[var(--errorColor)]/30"
             : "border-[var(--borderColor)]"
@@ -184,7 +184,7 @@ const Select = <T extends FieldValues>({
       </label>
       <select
         {...form.register(name as any, validation)}
-        className={`w-full px-3.5 py-2.5 bg-[var(--fillColor)] border ${
+        className={`w-full px-3.5 py-3 sm:py-2.5 bg-[var(--fillColor)] border ${
           error
             ? "border-[var(--errorColor)] ring-1 ring-[var(--errorColor)]/30"
             : "border-[var(--borderColor)]"
@@ -219,14 +219,14 @@ const Footer = ({
       <button
         type="button"
         onClick={onClose}
-        className="flex-1 md:flex-none px-6 py-2.5 rounded-xl border border-[var(--borderColor)] text-[var(--textColor)] font-medium text-sm hover:bg-[var(--fillColor)] transition-colors disabled:opacity-50"
+        className="flex-1 md:flex-none px-6 py-3 sm:py-2.5 rounded-xl border border-[var(--borderColor)] text-[var(--textColor)] font-medium text-sm hover:bg-[var(--fillColor)] transition-colors disabled:opacity-50"
         disabled={isPending}
       >
         إلغاء
       </button>
       <button
         type="submit"
-        className="flex-1 md:flex-none px-6 py-2.5 rounded-xl bg-[var(--primeColor)] text-white font-bold text-sm shadow-sm hover:shadow-md hover:brightness-105 disabled:opacity-50 transition-all duration-200"
+        className="flex-1 md:flex-none px-6 py-3 sm:py-2.5 rounded-xl bg-[var(--primeColor)] text-white font-bold text-sm shadow-sm hover:shadow-md hover:brightness-105 disabled:opacity-50 transition-all duration-200"
         disabled={isPending}
       >
         {isPending ? loadingText : mode === "edit" ? "تحديث" : submitText}

@@ -69,7 +69,7 @@ export default function Navbar({ isOpen, setIsOpen }: NavbarProps) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 220 }}
-            className="fixed top-0 right-0 h-full w-72 max-w-[80vw] bg-[var(--backgroundColor)] border-l border-[var(--borderColor)] flex flex-col z-40 shadow-2xl overflow-hidden"
+            className="fixed top-0 right-0 h-full w-80 sm:w-72 md:w-80 max-w-[85vw] bg-[var(--backgroundColor)] border-l border-[var(--borderColor)] flex flex-col z-40 shadow-2xl overflow-hidden"
           >
             {/* Header */}
             <div className="p-5 border-b border-[var(--borderColor)] flex items-center justify-end gap-3">
@@ -97,7 +97,7 @@ export default function Navbar({ isOpen, setIsOpen }: NavbarProps) {
                     to={item.path}
                     onClick={() => setIsOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center justify-end gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 ${
+                      `flex items-center justify-end gap-3 px-4 py-3 sm:py-2.5 rounded-xl transition-all duration-200 ${
                         isActive
                           ? "bg-[var(--primeColor)] text-white shadow-sm"
                           : "text-[var(--textColor)] hover:bg-[var(--fillColor)]"

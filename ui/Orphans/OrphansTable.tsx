@@ -150,22 +150,24 @@ function OrphansTableContent() {
               {/* Name & Type Column */}
               <DataTable.TableCell>
                 <div className="flex flex-col">
-                  <span className="font-bold text-[var(--textColor)]">
+                  {/* Added whitespace-nowrap here */}
+                  <span className="font-bold text-[var(--textColor)] whitespace-nowrap">
                     {orphan.name}
                   </span>
-                  <span className="text-xs text-[var(--textMuted)] md:hidden">
+                  {/* Added whitespace-nowrap here */}
+                  <span className="text-xs text-[var(--textMuted)] md:hidden whitespace-nowrap mt-1">
                     {orphan.type}
                   </span>
                 </div>
               </DataTable.TableCell>
 
               {/* Age */}
-              <DataTable.TableCell className="hidden md:table-cell">
+              <DataTable.TableCell className="hidden md:table-cell whitespace-nowrap">
                 {orphan.age} سنة
               </DataTable.TableCell>
 
               {/* Residence */}
-              <DataTable.TableCell className="hidden lg:table-cell">
+              <DataTable.TableCell className="hidden lg:table-cell whitespace-nowrap">
                 {orphan.residence}
               </DataTable.TableCell>
 
@@ -181,7 +183,7 @@ function OrphansTableContent() {
                       }}
                     />
                   </div>
-                  <span className="text-[10px] font-bold">
+                  <span className="text-[10px] font-bold whitespace-nowrap">
                     {orphan.priority}%
                   </span>
                 </div>
@@ -189,8 +191,9 @@ function OrphansTableContent() {
 
               {/* Sponsorship Status */}
               <DataTable.TableCell>
+                {/* Added whitespace-nowrap here to prevent badge text wrapping */}
                 <span
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                  className={`whitespace-nowrap px-3 py-1.5 rounded-full text-[10px] font-bold ${
                     orphan.is_sponsored
                       ? "bg-[var(--borderColor)]/80 text-[var(--primeColor)] outline border-[var(--primeColor)]"
                       : "bg-[var(--borderColor)]/80 text-[var(--errorColor)] outline border-[var(--errorColor)]"
@@ -202,7 +205,7 @@ function OrphansTableContent() {
 
               {/* Actions */}
               <DataTable.TableCell>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 md:gap-4">
                   <button
                     onClick={() => {
                       setEditItem(orphan);

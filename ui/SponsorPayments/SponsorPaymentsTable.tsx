@@ -101,11 +101,13 @@ function SponsorPaymentsTableContent() {
       case "فائض":
         return "bg-[var(--primeColor)]/10 text-[var(--primeColor)] border-[var(--primeColor)]";
       case "مدفوع جزئيا":
-        return "bg-amber-500/10 text-amber-600 border-amber-200";
+        // Note: You might also want to change text-amber-600 to text-amber-500 for better dark mode contrast
+        return "bg-amber-500/10 text-amber-500 border-amber-500/30";
       case "متوقف":
         return "bg-[var(--errorColor)]/10 text-[var(--errorColor)] border-[var(--errorColor)]";
       case "قيد الانتظار":
-        return "bg-slate-100 text-slate-500 border-slate-200";
+        // FIXED: Replaced stark white background with a dark-theme friendly translucent slate
+        return "bg-slate-500/10 text-slate-500/90 border-slate-500/30";
       default:
         return "bg-[var(--fillColor)] text-[var(--textMuted)] border-[var(--borderColor)]";
     }

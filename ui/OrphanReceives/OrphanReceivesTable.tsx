@@ -47,10 +47,14 @@ function PayStatusBadge({ status }: { status: string }) {
     "مدفوع جزئياً": "bg-[var(--warningColor)]/10 text-[var(--warningColor)]",
     "قيد الانتظار": "bg-[var(--errorColor)]/10 text-[var(--errorColor)]",
     "مدفوع جزئيا": "bg-[var(--warningColor)]/10 text-[var(--warningColor)]",
+    "مغطى بالكفيل": "bg-[var(--successColor)]/10 text-[var(--successColor)]",
+    "كفيل لم يدفع": "bg-[var(--errorColor)]/10 text-[var(--errorColor)]",
   };
   const style = map[status] ?? "bg-[var(--fillColor)] text-[var(--textMuted)]";
   return (
-    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${style}`}>
+    <span
+      className={`inline-block whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-bold ${style}`}
+    >
       {status}
     </span>
   );
@@ -80,100 +84,102 @@ function SponsorSubTable({
           لا يوجد كفلاء — الدار تغطي الـ 100,000 د.ع كاملاً
         </div>
       ) : (
-        <table className="w-full text-right">
-          <thead>
-            <tr className="border-b border-[var(--borderColor)]">
-              {[
-                "الكفيل",
-                "نوع الكفالة",
-                "المتوقع",
-                "المدفوع",
-                "المتبقي",
-                "الحالة",
-              ].map((h) => (
-                <th
-                  key={h}
-                  className="px-4 py-2 text-[10px] text-[var(--textMuted)] font-bold"
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {payments.map((p) => (
-              <tr
-                key={p.id}
-                className="border-b border-[var(--borderColor)]/50 hover:bg-[var(--fillColor)]"
-              >
-                <td className="px-4 py-2 text-xs font-bold text-[var(--textColor)]">
-                  {p.sponsor_name}
-                </td>
-                <td className="px-4 py-2 text-xs text-[var(--textMuted)]">
-                  {p.sponsorship_type || "—"}
-                </td>
-                <td className="px-4 py-2 text-xs font-mono">
-                  {p.expected_amount?.toLocaleString()}{" "}
-                  <span className="text-[10px] text-[var(--textMuted)]">
-                    د.ع
-                  </span>
-                </td>
-                <td className="px-4 py-2 text-xs font-mono text-[var(--successColor)]">
-                  {p.paid_amount?.toLocaleString()}{" "}
-                  <span className="text-[10px]">د.ع</span>
-                </td>
-                <td
-                  className={`px-4 py-2 text-xs font-mono ${
-                    p.remaining_debt > 0
-                      ? "text-[var(--errorColor)]"
-                      : "text-[var(--successColor)]"
-                  }`}
-                >
-                  {p.remaining_debt > 0 ? "-" : ""}
-                  {p.remaining_debt?.toLocaleString()}{" "}
-                  <span className="text-[10px]">د.ع</span>
-                </td>
-                <td className="px-4 py-2">
-                  <PayStatusBadge status={p.status} />
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-right min-w-max">
+            <thead>
+              <tr className="border-b border-[var(--borderColor)]">
+                {[
+                  "الكفيل",
+                  "نوع الكفالة",
+                  "المتوقع",
+                  "المدفوع",
+                  "المتبقي",
+                  "الحالة",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-2 text-[10px] text-[var(--textMuted)] font-bold whitespace-nowrap"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {payments.map((p) => (
+                <tr
+                  key={p.id}
+                  className="border-b border-[var(--borderColor)]/50 hover:bg-[var(--fillColor)]"
+                >
+                  <td className="px-4 py-2 text-xs font-bold text-[var(--textColor)] whitespace-nowrap">
+                    {p.sponsor_name}
+                  </td>
+                  <td className="px-4 py-2 text-xs text-[var(--textMuted)] whitespace-nowrap">
+                    {p.sponsorship_type || "—"}
+                  </td>
+                  <td className="px-4 py-2 text-xs font-mono whitespace-nowrap">
+                    {p.expected_amount?.toLocaleString()}{" "}
+                    <span className="text-[10px] text-[var(--textMuted)]">
+                      د.ع
+                    </span>
+                  </td>
+                  <td className="px-4 py-2 text-xs font-mono text-[var(--successColor)] whitespace-nowrap">
+                    {p.paid_amount?.toLocaleString()}{" "}
+                    <span className="text-[10px]">د.ع</span>
+                  </td>
+                  <td
+                    className={`px-4 py-2 text-xs font-mono whitespace-nowrap ${
+                      p.remaining_debt > 0
+                        ? "text-[var(--errorColor)]"
+                        : "text-[var(--successColor)]"
+                    }`}
+                  >
+                    {p.remaining_debt > 0 ? "-" : ""}
+                    {p.remaining_debt?.toLocaleString()}{" "}
+                    <span className="text-[10px]">د.ع</span>
+                  </td>
+                  <td className="px-4 py-2 whitespace-nowrap">
+                    <PayStatusBadge status={p.status} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* Orphanage funds breakdown */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-t border-[var(--borderColor)] bg-[var(--fillColor)]/60">
         <div className="flex flex-wrap gap-2">
           {gapCovered > 0 && (
-            <span className="text-[10px] bg-[var(--warningColor)]/10 text-[var(--warningColor)] px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+            <span className="text-[10px] whitespace-nowrap bg-[var(--warningColor)]/10 text-[var(--warningColor)] px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
               <AlertTriangle size={10} />
               غُطّي {gapCovered.toLocaleString()} د.ع من فائض الدار
             </span>
           )}
           {uncoveredGap > 0 && (
-            <span className="text-[10px] bg-[var(--errorColor)]/10 text-[var(--errorColor)] px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+            <span className="text-[10px] whitespace-nowrap bg-[var(--errorColor)]/10 text-[var(--errorColor)] px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
               <AlertTriangle size={10} />
               عجز غير مغطى: {uncoveredGap.toLocaleString()} د.ع
             </span>
           )}
         </div>
         <div className="flex flex-wrap gap-3 text-[10px] text-[var(--textMuted)]">
-          <span>
+          <span className="whitespace-nowrap">
             حصة الدار الأساسية:{" "}
             <strong className="text-[var(--textColor)]">
               {orphanageShare.toLocaleString()} د.ع
             </strong>
           </span>
           {gap > 0 && (
-            <span>
+            <span className="whitespace-nowrap">
               إجمالي دفع الدار:{" "}
               <strong className="text-[var(--warningColor)]">
                 {orphanageActualPaid.toLocaleString()} د.ع
               </strong>
             </span>
           )}
-          <span>
+          <span className="whitespace-nowrap">
             الفائض المتاح:{" "}
             <strong className="text-[var(--primeColor)]">
               {surplusAvailable.toLocaleString()} د.ع
@@ -195,10 +201,10 @@ function OrphanRow({ item }: { item: any }) {
         {/* Name + Sponsors */}
         <DataTable.TableCell>
           <div className="flex flex-col items-end gap-0.5">
-            <span className="font-bold text-sm text-[var(--textColor)]">
+            <span className="font-bold text-sm text-[var(--textColor)] whitespace-nowrap">
               {item.orphan_name}
             </span>
-            <span className="text-[10px] text-[var(--textMuted)]">
+            <span className="text-[10px] text-[var(--textMuted)] whitespace-nowrap">
               {item.orphan_type} · {item.orphan_residence}
             </span>
             {/* Sponsors list */}
@@ -207,7 +213,7 @@ function OrphanRow({ item }: { item: any }) {
                 {item.sponsor_payments.map((p: any) => (
                   <span
                     key={p.id}
-                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                    className={`inline-flex whitespace-nowrap items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border ${
                       p.remaining_debt <= 0
                         ? "bg-[var(--successColor)]/10 text-[var(--successColor)] border-[var(--successColor)]/30"
                         : p.paid_amount > 0
@@ -220,7 +226,7 @@ function OrphanRow({ item }: { item: any }) {
                 ))}
               </div>
             ) : (
-              <span className="text-[10px] text-[var(--textMuted)] mt-0.5 italic">
+              <span className="text-[10px] text-[var(--textMuted)] mt-0.5 italic whitespace-nowrap">
                 بدون كفيل
               </span>
             )}
@@ -228,13 +234,13 @@ function OrphanRow({ item }: { item: any }) {
         </DataTable.TableCell>
 
         {/* Orphanage share */}
-        <DataTable.TableCell className="hidden md:table-cell font-mono text-sm text-right">
+        <DataTable.TableCell className="hidden md:table-cell font-mono text-sm text-right whitespace-nowrap">
           {item.orphanage_base_share?.toLocaleString()}
           <span className="text-[10px] text-[var(--textMuted)] mr-1">د.ع</span>
         </DataTable.TableCell>
 
         {/* Sponsor share */}
-        <DataTable.TableCell className="hidden md:table-cell font-mono text-sm text-right">
+        <DataTable.TableCell className="hidden md:table-cell font-mono text-sm text-right whitespace-nowrap">
           {item.expected_sponsor_share > 0 ? (
             <>
               {item.expected_sponsor_share?.toLocaleString()}{" "}
@@ -246,7 +252,7 @@ function OrphanRow({ item }: { item: any }) {
         </DataTable.TableCell>
 
         {/* Total target */}
-        <DataTable.TableCell className="font-mono text-sm font-bold text-right">
+        <DataTable.TableCell className="font-mono text-sm font-bold text-right whitespace-nowrap">
           {item.total_monthly_target?.toLocaleString()}
           <span className="text-[10px] font-normal text-[var(--textMuted)] mr-1">
             د.ع
@@ -254,13 +260,13 @@ function OrphanRow({ item }: { item: any }) {
         </DataTable.TableCell>
 
         {/* Received */}
-        <DataTable.TableCell className="hidden lg:table-cell font-mono text-sm font-bold text-right text-[var(--successColor)]">
+        <DataTable.TableCell className="hidden lg:table-cell font-mono text-sm font-bold text-right text-[var(--successColor)] whitespace-nowrap">
           {item.total_actual_received?.toLocaleString()}
           <span className="text-[10px] font-normal mr-1">د.ع</span>
         </DataTable.TableCell>
 
         {/* Gap */}
-        <DataTable.TableCell className="hidden md:table-cell font-mono text-sm font-bold text-right">
+        <DataTable.TableCell className="hidden md:table-cell font-mono text-sm font-bold text-right whitespace-nowrap">
           {item.financial_gap > 0 ? (
             <span className="text-[var(--errorColor)]">
               -{item.financial_gap?.toLocaleString()}
@@ -274,7 +280,7 @@ function OrphanRow({ item }: { item: any }) {
         {/* Status */}
         <DataTable.TableCell>
           <span
-            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold border ${s.style}`}
+            className={`inline-flex items-center whitespace-nowrap gap-1 px-2 py-1 rounded-md text-[10px] font-bold border ${s.style}`}
           >
             {s.icon} {s.label}
           </span>
@@ -420,21 +426,27 @@ function OrphanReceivesContent() {
       <DataTable.Table>
         <DataTable.TableHead>
           <DataTable.TableRow>
-            <DataTable.TableHeaderCell>اسم اليتيم</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="hidden md:table-cell">
+            <DataTable.TableHeaderCell className="whitespace-nowrap">
+              اسم اليتيم
+            </DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="hidden md:table-cell whitespace-nowrap">
               حصة الدار
             </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="hidden md:table-cell">
+            <DataTable.TableHeaderCell className="hidden md:table-cell whitespace-nowrap">
               حصة الكفلاء المتوقعة
             </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>الهدف (100k)</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="hidden lg:table-cell">
+            <DataTable.TableHeaderCell className="whitespace-nowrap">
+              الهدف (100k)
+            </DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="hidden lg:table-cell whitespace-nowrap">
               المُستلم الفعلي
             </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="hidden md:table-cell">
+            <DataTable.TableHeaderCell className="hidden md:table-cell whitespace-nowrap">
               العجز
             </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>الحالة</DataTable.TableHeaderCell>
+            <DataTable.TableHeaderCell className="whitespace-nowrap">
+              الحالة
+            </DataTable.TableHeaderCell>
             <DataTable.TableHeaderCell>
               <span className="sr-only">عرض الكفلاء</span>
             </DataTable.TableHeaderCell>

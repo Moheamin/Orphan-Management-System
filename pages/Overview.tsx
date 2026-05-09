@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Users as UsersIcon, CreditCard, Heart, Baby } from "lucide-react";
 import Card from "../components/Card";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -22,6 +22,22 @@ import {
 } from "recharts";
 
 function Overview() {
+  const [chartHeight, setChartHeight] = useState(260);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setChartHeight(220);
+      } else {
+        setChartHeight(280);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const { data: orphansData, isLoading: orphansLoading } = useGetOrphans();
   const { data: sponsorStats, isLoading: sponsorsLoading } = useSponsorStats();
   const { data: sponsorsData, isLoading: sponsorsListLoading } =
@@ -32,14 +48,12 @@ function Overview() {
     useGetSponsorPayments();
   const { isLoading: usersLoading } = useGetUsers();
 
-  // Stats
   const totalOrphans = orphansData?.orphan?.length ?? 0;
   const totalSponsors = sponsorStats?.totalSponsors ?? 0;
   const totalSponsorships = sponsorStats?.totalSponsorships ?? 0;
   const totalPayments =
     payments?.reduce((sum: any, p: any) => sum + (p.paid_amount ?? 0), 0) ?? 0;
 
-  // Helper to count items created this month
   function countCreatedThisMonth(items: any[]) {
     const now = new Date();
     const thisMonth = now.getMonth();
@@ -52,45 +66,47 @@ function Overview() {
   }
 
   const newOrphansThisMonth = countCreatedThisMonth(orphansData?.orphan || []);
-  // Use actual sponsor list to count new sponsors this month
   const newSponsorsThisMonth = sponsorsData?.sponsor
     ? countCreatedThisMonth(sponsorsData.sponsor)
     : 0;
   const newSponsorshipsThisMonth = countCreatedThisMonth(sponsorships || []);
 
-  // Urgent cases: orphans with high priority (e.g., >= 80)
   const urgentCases = (orphansData?.orphan || []).filter(
     (o: any) => o.priority >= 80,
   );
-  // Optionally, add medium priority for more cases
   const mediumCases = (orphansData?.orphan || []).filter(
     (o: any) => o.priority >= 60 && o.priority < 80,
   );
 
-  // Priority badge helper
   const getPriorityBadge = (priority: number) => {
+    const baseClasses =
+      "px-3 py-1 rounded-full font-bold text-xs whitespace-nowrap";
     if (priority >= 80) {
       return (
-        <span className="bg-[var(--errorColor)]/10 text-[var(--errorColor)] px-3 py-1 rounded-full font-bold text-xs">
+        <span
+          className={`${baseClasses} bg-[var(--errorColor)]/10 text-[var(--errorColor)]`}
+        >
           عالية
         </span>
       );
     } else if (priority >= 60) {
       return (
-        <span className="bg-[var(--warningColor)]/10 text-[var(--warningColor)] px-3 py-1 rounded-full font-bold text-xs">
+        <span
+          className={`${baseClasses} bg-[var(--warningColor)]/10 text-[var(--warningColor)]`}
+        >
           متوسطة
         </span>
       );
-    } else {
-      return (
-        <span className="bg-[var(--successColor)]/10 text-[var(--successColor)] px-3 py-1 rounded-full font-bold text-xs">
-          منخفضة
-        </span>
-      );
     }
+    return (
+      <span
+        className={`${baseClasses} bg-[var(--successColor)]/10 text-[var(--successColor)]`}
+      >
+        منخفضة
+      </span>
+    );
   };
 
-  // Pie chart: aggregate real sponsorship types (from sponsor table)
   const sponsorshipTypes = React.useMemo(() => {
     if (!sponsorships || !Array.isArray(sponsorships)) return [];
     const typeMap: Record<string, number> = {};
@@ -101,10 +117,8 @@ function Overview() {
     return Object.entries(typeMap).map(([name, value]) => ({ name, value }));
   }, [sponsorships]);
 
-  // Bar chart: aggregate real monthly stats for sponsors and orphans
   const barData = React.useMemo(() => {
     if (!orphansData?.orphan || !Array.isArray(orphansData.orphan)) return [];
-    // Get all months in the last 6 months
     const now = new Date();
     const monthsArr: { key: string; label: string }[] = [];
     for (let i = 5; i >= 0; i--) {
@@ -113,7 +127,6 @@ function Overview() {
       const label = d.toLocaleString("ar-EG", { month: "long" });
       monthsArr.push({ key, label });
     }
-    // Count orphans per month
     const orphanCounts: Record<string, number> = {};
     orphansData.orphan.forEach((o: any) => {
       if (!o.created_at) return;
@@ -121,7 +134,6 @@ function Overview() {
       const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
       orphanCounts[key] = (orphanCounts[key] || 0) + 1;
     });
-    // Count sponsors per month using actual sponsor list
     let sponsorCounts: Record<string, number> = {};
     if (Array.isArray(sponsorsData?.sponsor)) {
       sponsorsData.sponsor.forEach((s: any) => {
@@ -131,14 +143,12 @@ function Overview() {
         sponsorCounts[key] = (sponsorCounts[key] || 0) + 1;
       });
     }
-    // Fallback: try to use sponsorStats.totalSponsors if sponsors array is not available
-    // Compose bar data
     return monthsArr.map(({ key, label }) => ({
       month: label,
       الكفلاء: sponsorCounts[key] || 0,
       الأيتام: orphanCounts[key] || 0,
     }));
-  }, [orphansData, sponsorStats]);
+  }, [orphansData, sponsorsData]);
 
   const COLORS = ["#3b7e5c", "#6fcf97", "#b2f2bb"];
 
@@ -151,93 +161,71 @@ function Overview() {
     usersLoading;
 
   return (
-    <div className="flex flex-col gap-6 px-4 md:px-8 py-6 bg-[var(--backgroundColor)] min-h-screen">
+    <div
+      className="flex flex-col gap-6 px-4 md:px-8 py-6 bg-[var(--backgroundColor)] min-h-screen"
+      dir="rtl"
+    >
       {loading ? (
         <LoadingSpinner size="md" />
       ) : (
         <>
-          {/* Summary Cards */}
+          {/* Stats Grid */}
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl mx-auto">
-            <Card>
-              <div className="flex items-center gap-4 w-full">
-                <span className="p-3 bg-[var(--fillColor)] rounded-xl text-[var(--primeColor)]">
-                  <CreditCard size={28} />
-                </span>
-                <div className="flex flex-col items-end text-right gap-1">
-                  <span className="text-xs text-[var(--textMuted2)]">
-                    دفعات الكفلاء
-                  </span>
-                  <span className="text-xl font-bold text-[var(--cellTextColor)]">
-                    {totalPayments.toLocaleString()} دينار عراقي
-                  </span>
-                  <span className="text-xs text-[var(--textMuted2)]">
-                    إجمالي هذا الشهر
-                  </span>
-                </div>
-              </div>
-            </Card>
-            <Card>
-              <div className="flex items-center gap-4 w-full">
-                <span className="p-3 bg-[var(--fillColor)] rounded-xl text-[var(--primeColor)]">
-                  <Heart size={28} />
-                </span>
-                <div className="flex flex-col items-end text-right gap-1">
-                  <span className="text-xs text-[var(--textMuted2)]">
-                    الكفالات الفعالة
-                  </span>
-                  <span className="text-xl font-bold text-[var(--cellTextColor)]">
-                    {totalSponsorships}
-                  </span>
-                  <span className="text-xs text-[var(--textMuted2)]">
-                    +{newSponsorshipsThisMonth} هذا الشهر
-                  </span>
-                </div>
-              </div>
-            </Card>
-            <Card>
-              <div className="flex items-center gap-4 w-full">
-                <span className="p-3 bg-[var(--fillColor)] rounded-xl text-[var(--primeColor)]">
-                  <UsersIcon size={28} />
-                </span>
-                <div className="flex flex-col items-end text-right gap-1">
-                  <span className="text-xs text-[var(--textMuted2)]">
-                    الكفلاء النشطون
-                  </span>
-                  <span className="text-xl font-bold text-[var(--cellTextColor)]">
-                    {totalSponsors}
-                  </span>
-                  <span className="text-xs text-[var(--textMuted2)]">
-                    +{newSponsorsThisMonth} هذا الشهر
+            {[
+              {
+                icon: <CreditCard size={28} />,
+                label: "دفعات الكفلاء",
+                val: `${totalPayments.toLocaleString()} د.ع`,
+                sub: "إجمالي هذا الشهر",
+              },
+              {
+                icon: <Heart size={28} />,
+                label: "الكفالات الفعالة",
+                val: totalSponsorships,
+                sub: `+${newSponsorshipsThisMonth} هذا الشهر`,
+              },
+              {
+                icon: <UsersIcon size={28} />,
+                label: "الكفلاء النشطون",
+                val: totalSponsors,
+                sub: `+${newSponsorsThisMonth} هذا الشهر`,
+              },
+              {
+                icon: <Baby size={28} />,
+                label: "إجمالي الأيتام",
+                val: totalOrphans,
+                sub: `+${newOrphansThisMonth} هذا الشهر`,
+              },
+            ].map((item, i) => (
+              <Card key={i}>
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex flex-col items-start text-right gap-1">
+                    <span className="text-xs text-[var(--textMuted2)]">
+                      {item.label}
+                    </span>
+                    <span className="text-xl font-bold text-[var(--cellTextColor)]">
+                      {item.val}
+                    </span>
+                    <span className="text-xs text-[var(--textMuted2)]">
+                      {item.sub}
+                    </span>
+                  </div>
+                  <span className="p-3 bg-[var(--fillColor)] rounded-xl text-[var(--primeColor)]">
+                    {item.icon}
                   </span>
                 </div>
-              </div>
-            </Card>
-            <Card>
-              <div className="flex items-center gap-4 w-full">
-                <span className="p-3 bg-[var(--fillColor)] rounded-xl text-[var(--primeColor)]">
-                  <Baby size={28} />
-                </span>
-                <div className="flex flex-col items-end text-right gap-1">
-                  <span className="text-xs text-[var(--textMuted2)]">
-                    إجمالي الأيتام
-                  </span>
-                  <span className="text-xl font-bold text-[var(--cellTextColor)]">
-                    {totalOrphans}
-                  </span>
-                  <span className="text-xs text-[var(--textMuted2)]">
-                    +{newOrphansThisMonth} هذا الشهر
-                  </span>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            ))}
           </ul>
-          {/* Charts and more sections can be added here using recharts */}
+
+          {/* Charts Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-6xl mx-auto">
+            {/* Pie Chart Card */}
             <div className="bg-[var(--backgroundColor)] rounded-2xl shadow-[var(--cardShadow)] border border-[var(--borderColor)] p-5">
-              <h2 className="text-sm font-bold mb-3 text-[var(--primeColor)]">
+              <h2 className="text-sm font-bold mb-3 text-[var(--primeColor)] text-right">
                 توزيع الكفالات
               </h2>
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={chartHeight}>
                 <PieChart>
                   <Pie
                     data={sponsorshipTypes}
@@ -258,7 +246,6 @@ function Overview() {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-              {/* Detailed breakdown table */}
               <div className="mt-4">
                 {sponsorshipTypes.length === 0 ? (
                   <div className="text-center text-sm text-[var(--textMuted)] py-4">
@@ -274,33 +261,35 @@ function Overview() {
                       </tr>
                     </thead>
                     <tbody>
-                      {sponsorshipTypes.map((row, idx) => {
-                        const percent = Math.round(
-                          (row.value / (sponsorships?.length || 1)) * 100,
-                        );
-                        return (
-                          <tr
-                            key={row.name}
-                            className={
-                              idx % 2 === 0 ? "bg-[var(--fillColor)]" : ""
-                            }
-                          >
-                            <td className="py-1 font-bold">{row.name}</td>
-                            <td className="py-1">{row.value}</td>
-                            <td className="py-1">{percent}%</td>
-                          </tr>
-                        );
-                      })}
+                      {sponsorshipTypes.map((row, idx) => (
+                        <tr
+                          key={row.name}
+                          className={
+                            idx % 2 === 0 ? "bg-[var(--fillColor)]" : ""
+                          }
+                        >
+                          <td className="py-1 font-bold">{row.name}</td>
+                          <td className="py-1">{row.value}</td>
+                          <td className="py-1">
+                            {Math.round(
+                              (row.value / (sponsorships?.length || 1)) * 100,
+                            )}
+                            %
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 )}
               </div>
             </div>
+
+            {/* Bar Chart Card */}
             <div className="bg-[var(--backgroundColor)] rounded-2xl shadow-[var(--cardShadow)] border border-[var(--borderColor)] p-5">
-              <h2 className="text-sm font-bold mb-3 text-[var(--primeColor)]">
+              <h2 className="text-sm font-bold mb-3 text-[var(--primeColor)] text-right">
                 الإحصائيات الشهرية
               </h2>
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={chartHeight}>
                 <BarChart
                   data={barData}
                   margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
@@ -325,9 +314,11 @@ function Overview() {
               </ResponsiveContainer>
             </div>
           </div>
-          {/* Urgent cases section */}
+
+          {/* Urgent Cases Section */}
           <div className="w-full max-w-6xl mx-auto">
             <div className="bg-[var(--backgroundColor)] rounded-2xl shadow-[var(--cardShadow)] border border-[var(--borderColor)] p-5 md:p-6 flex flex-col gap-4">
+              {/* Header: Text Right, Icon Left */}
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-bold text-right text-[var(--textColor)]">
                   حالات تحتاج اهتمام عاجل
@@ -349,41 +340,26 @@ function Overview() {
                   </svg>
                 </span>
               </div>
-              {/* Urgent (high) priority cases, sorted by priority descending */}
+
+              {/* List Items */}
               {(() => {
                 const sortedCases = [...urgentCases, ...mediumCases].sort(
                   (a, b) => b.priority - a.priority,
                 );
-                if (sortedCases.length === 0) {
+                if (sortedCases.length === 0)
                   return (
                     <div className="text-center text-sm text-[var(--textMuted)] py-6">
                       لا توجد حالات عاجلة حالياً
                     </div>
                   );
-                }
-                return sortedCases.map((orphan: any, _idx: number) => (
+
+                return sortedCases.map((orphan: any) => (
                   <div
                     key={orphan.id}
-                    className="flex flex-col sm:flex-row-reverse sm:items-center sm:justify-between gap-2 bg-[var(--fillColor)] rounded-xl p-4 border border-[var(--borderColor)]/40"
+                    className="flex items-center justify-between gap-4 bg-[var(--fillColor)] rounded-xl p-4 border border-[var(--borderColor)]/40"
                   >
-                    <div className="flex flex-row-reverse items-center justify-between sm:justify-end gap-3">
-                      {getPriorityBadge(orphan.priority)}
-                      <div className="flex flex-col items-end gap-0.5 text-right sm:hidden">
-                        <span className="font-bold text-sm text-[var(--textColor)]">
-                          {orphan.name}{" "}
-                          <span className="text-[var(--textMuted)] text-xs font-normal">
-                            ({orphan.age} سنة)
-                          </span>
-                        </span>
-                        <span className="text-xs text-[var(--textMuted)]">
-                          {orphan.type ||
-                            orphan.description ||
-                            orphan.residence ||
-                            "—"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="hidden sm:flex flex-col items-end gap-0.5 text-right">
+                    {/* 1. النص في اليمين (بسبب RTL هو العنصر الأول في الكود) */}
+                    <div className="flex flex-col items-start text-right gap-0.5 flex-1">
                       <span className="font-bold text-sm text-[var(--textColor)]">
                         {orphan.name}{" "}
                         <span className="text-[var(--textMuted)] text-xs font-normal">
@@ -396,6 +372,11 @@ function Overview() {
                           orphan.residence ||
                           "—"}
                       </span>
+                    </div>
+
+                    {/* 2. الشارة (Badge) في اليسار */}
+                    <div className="shrink-0">
+                      {getPriorityBadge(orphan.priority)}
                     </div>
                   </div>
                 ));

@@ -9,14 +9,17 @@ export function CheckPopup({
 }) {
   return (
     <div
-      className="fixed inset-0 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
+      // Changed items-end to items-center for mobile centering
+      // Changed p-0 to p-6 to give it a "fit" margin on mobile screens
+      className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fadeIn"
       onClick={onCancel}
       style={{
         backgroundColor: "rgba(22, 31, 44, 0.5)",
       }}
     >
       <div
-        className="rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden animate-slideUp border"
+        // Changed rounded-t-3xl to rounded-3xl so it is a floating card on mobile
+        className="rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden animate-slideUp border"
         onClick={(e) => e.stopPropagation()}
         dir="rtl"
         style={{
@@ -98,18 +101,14 @@ export function CheckPopup({
 
       <style>{`
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
 
         @keyframes slideUp {
           from {
             opacity: 0;
-            transform: translateY(25px) scale(0.93);
+            transform: translateY(20px) scale(0.95);
           }
           to {
             opacity: 1;
@@ -122,7 +121,7 @@ export function CheckPopup({
         }
 
         .animate-slideUp {
-          animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+          animation: slideUp 0.3s ease-out;
         }
       `}</style>
     </div>

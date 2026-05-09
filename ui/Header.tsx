@@ -119,7 +119,7 @@ export default function Header({
 
                 {showDropdown && (
                   <div
-                    className="absolute left-0 top-full mt-2 w-56 rounded-xl border border-[var(--borderColor)] bg-[var(--backgroundColor)] shadow-lg p-2 animate-scaleIn z-50"
+                    className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-[var(--borderColor)] bg-[var(--backgroundColor)] shadow-lg p-2 animate-scaleIn z-50 translate-x-2 sm:translate-x-0"
                     dir="rtl"
                   >
                     <div className="px-3 py-2.5 border-b border-[var(--borderColor)] mb-2">

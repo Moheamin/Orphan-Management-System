@@ -27,9 +27,7 @@ const FUND_FILTERS = [
 function OrphanageFundsContent() {
   const { data: funds, isLoading, isError } = useGetOrphanageFunds();
   const { updateNote } = useUpdateOrphanageFundNote();
-
   const { searchQuery, filterValue } = DataTable.useContext();
-
   const [notes, setNotes] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -46,7 +44,6 @@ function OrphanageFundsContent() {
 
   const filtered = useMemo(() => {
     let result = records;
-
     const query = searchQuery.trim().toLowerCase();
     if (query) {
       result = result.filter(
@@ -55,11 +52,9 @@ function OrphanageFundsContent() {
           f.transaction_type?.toLowerCase().includes(query),
       );
     }
-
     if (filterValue && filterValue !== "all") {
       result = result.filter((f) => f.transaction_type === filterValue);
     }
-
     return result;
   }, [records, searchQuery, filterValue]);
 
@@ -128,142 +123,121 @@ function OrphanageFundsContent() {
         </div>
       </DataTable.Header>
 
-      <DataTable.Table>
-        <DataTable.TableHead>
-          <DataTable.TableRow>
-            <DataTable.TableHeaderCell>المبلغ</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell>نوع العملية</DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="hidden md:table-cell">
-              الملاحظات
-            </DataTable.TableHeaderCell>
-            <DataTable.TableHeaderCell className="hidden lg:table-cell">
-              التاريخ
-            </DataTable.TableHeaderCell>
-          </DataTable.TableRow>
-        </DataTable.TableHead>
+      {/* Horizontal Scroll Container */}
+      <div className="w-full overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-[var(--borderColor)]">
+        <div className="min-w-[700px]">
+          {" "}
+          {/* Forces the table to maintain width on mobile */}
+          <DataTable.Table>
+            <DataTable.TableHead>
+              <DataTable.TableRow>
+                <DataTable.TableHeaderCell className="w-[150px]">
+                  المبلغ
+                </DataTable.TableHeaderCell>
+                <DataTable.TableHeaderCell className="w-[120px]">
+                  نوع العملية
+                </DataTable.TableHeaderCell>
+                <DataTable.TableHeaderCell className="min-w-[250px]">
+                  الملاحظات
+                </DataTable.TableHeaderCell>
+                <DataTable.TableHeaderCell className="w-[180px]">
+                  التاريخ
+                </DataTable.TableHeaderCell>
+              </DataTable.TableRow>
+            </DataTable.TableHead>
 
-        <DataTable.TableBody
-          data={filtered}
-          emptyMessage={
-            filterValue !== "all"
-              ? "لا توجد عمليات تطابق هذا الفلتر"
-              : "لا توجد عمليات في الصندوق"
-          }
-          renderRow={(fund: FundRecord) => (
-            <DataTable.TableRow key={fund.id}>
-              <DataTable.TableCell>
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-2">
-                    {fund.transaction_type === "surplus" ? (
-                      <ArrowDownRight
-                        size={16}
-                        className="text-[var(--primeColor)] shrink-0"
-                      />
-                    ) : (
-                      <ArrowUpRight
-                        size={16}
-                        className="text-[var(--successColor)] shrink-0"
-                      />
-                    )}
-                    <span className="font-bold text-sm text-[var(--textColor)]">
-                      {fund.amount?.toLocaleString()}{" "}
-                      <span className="text-[10px] font-normal text-[var(--textMuted)]">
-                        د.ع
+            <DataTable.TableBody
+              data={filtered}
+              emptyMessage={
+                filterValue !== "all"
+                  ? "لا توجد عمليات تطابق هذا الفلتر"
+                  : "لا توجد عمليات في الصندوق"
+              }
+              renderRow={(fund: FundRecord) => (
+                <DataTable.TableRow key={fund.id}>
+                  {/* Amount Cell */}
+                  <DataTable.TableCell>
+                    <div className="flex items-center gap-2 whitespace-nowrap">
+                      {fund.transaction_type === "surplus" ? (
+                        <ArrowDownRight
+                          size={16}
+                          className="text-[var(--primeColor)] shrink-0"
+                        />
+                      ) : (
+                        <ArrowUpRight
+                          size={16}
+                          className="text-[var(--successColor)] shrink-0"
+                        />
+                      )}
+                      <span className="font-bold text-sm text-[var(--textColor)] tabular-nums">
+                        {fund.amount?.toLocaleString()}{" "}
+                        <span className="text-[10px] font-normal text-[var(--textMuted)]">
+                          د.ع
+                        </span>
                       </span>
+                    </div>
+                  </DataTable.TableCell>
+
+                  {/* Type Cell */}
+                  <DataTable.TableCell>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold border whitespace-nowrap ${getTypeStyle(fund.transaction_type)}`}
+                    >
+                      {getTypeLabel(fund.transaction_type)}
                     </span>
-                  </div>
-                  {/* Mobile-only: note textarea inline under amount */}
-                  <div className="md:hidden relative group">
-                    <textarea
-                      rows={1}
-                      className="w-full text-xs text-[var(--textColor)] bg-[var(--borderColor)] border border-transparent rounded-lg px-2 py-1.5
-                        hover:border-[var(--primeColor)] focus:bg-[var(--fillColor)] focus:border-[var(--primeColor)]
-                        focus:ring-2 focus:ring-[var(--primeColor)]/10 resize-none overflow-hidden"
-                      value={notes[fund.id] ?? ""}
-                      placeholder="ملاحظة..."
-                      maxLength={200}
-                      onChange={(e) => {
-                        setNotes((prev) => ({
-                          ...prev,
-                          [fund.id]: e.target.value,
-                        }));
-                        e.target.style.height = "auto";
-                        e.target.style.height = `${e.target.scrollHeight}px`;
-                      }}
-                      onBlur={() => {
-                        updateNote({ id: fund.id, note: notes[fund.id] ?? "" });
-                      }}
-                    />
-                    <StickyNote
-                      size={12}
-                      className="absolute left-2 top-2 opacity-0 group-hover:opacity-30 pointer-events-none transition-opacity"
-                    />
-                  </div>
-                  {/* Mobile-only: date */}
-                  <span className="md:hidden text-[10px] text-[var(--textMuted)] tabular-nums">
+                  </DataTable.TableCell>
+
+                  {/* Notes Cell (Textarea) */}
+                  <DataTable.TableCell>
+                    <div className="relative group min-w-[200px]">
+                      <textarea
+                        rows={1}
+                        className="w-full text-xs text-[var(--textColor)] bg-[var(--borderColor)] border border-transparent rounded-lg px-2 py-2 
+                          hover:border-[var(--primeColor)] focus:bg-[var(--fillColor)] focus:border-[var(--primeColor)] 
+                          focus:ring-2 focus:ring-[var(--primeColor)]/10 resize-none overflow-hidden"
+                        value={notes[fund.id] ?? ""}
+                        placeholder="ملاحظة..."
+                        maxLength={200}
+                        onChange={(e) => {
+                          setNotes((prev) => ({
+                            ...prev,
+                            [fund.id]: e.target.value,
+                          }));
+                          e.target.style.height = "auto";
+                          e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
+                        onBlur={() =>
+                          updateNote({
+                            id: fund.id,
+                            note: notes[fund.id] ?? "",
+                          })
+                        }
+                      />
+                      <StickyNote
+                        size={12}
+                        className="absolute left-2 top-2.5 opacity-0 group-hover:opacity-30 pointer-events-none transition-opacity"
+                      />
+                    </div>
+                  </DataTable.TableCell>
+
+                  {/* Date Cell */}
+                  <DataTable.TableCell className="tabular-nums text-[var(--textMuted2)] text-xs whitespace-nowrap">
                     {fund.created_at
                       ? new Date(fund.created_at).toLocaleDateString("ar-IQ", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })
-                      : ""}
-                  </span>
-                </div>
-              </DataTable.TableCell>
-
-              <DataTable.TableCell>
-                <span
-                  className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold border ${getTypeStyle(fund.transaction_type)}`}
-                >
-                  {getTypeLabel(fund.transaction_type)}
-                </span>
-              </DataTable.TableCell>
-
-              <DataTable.TableCell className="hidden md:table-cell">
-                <div className="relative group">
-                  <textarea
-                    rows={1}
-                    className="w-full text-xs text-[var(--textColor)] bg-[var(--borderColor)] border border-transparent rounded-lg px-2 py-2 
-                      hover:border-[var(--primeColor)] focus:bg-[var(--fillColor)] focus:border-[var(--primeColor)] 
-                      focus:ring-2 focus:ring-[var(--primeColor)]/10 resize-none overflow-hidden"
-                    value={notes[fund.id] ?? ""}
-                    placeholder="ملاحظة..."
-                    maxLength={200}
-                    onChange={(e) => {
-                      setNotes((prev) => ({
-                        ...prev,
-                        [fund.id]: e.target.value,
-                      }));
-                      e.target.style.height = "auto";
-                      e.target.style.height = `${e.target.scrollHeight}px`;
-                    }}
-                    onBlur={() => {
-                      updateNote({ id: fund.id, note: notes[fund.id] ?? "" });
-                    }}
-                  />
-                  <StickyNote
-                    size={12}
-                    className="absolute left-2 top-2.5 opacity-0 group-hover:opacity-30 pointer-events-none transition-opacity"
-                  />
-                </div>
-              </DataTable.TableCell>
-
-              <DataTable.TableCell className="hidden lg:table-cell tabular-nums text-[var(--textMuted2)] text-xs">
-                {fund.created_at
-                  ? new Date(fund.created_at).toLocaleDateString("ar-IQ", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : "—"}
-              </DataTable.TableCell>
-            </DataTable.TableRow>
-          )}
-        />
-      </DataTable.Table>
+                      : "—"}
+                  </DataTable.TableCell>
+                </DataTable.TableRow>
+              )}
+            />
+          </DataTable.Table>
+        </div>
+      </div>
 
       <DataTable.ResultsCount count={filtered.length} total={records.length} />
     </>

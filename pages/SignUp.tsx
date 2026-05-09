@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Button from "../components/Button";
 import "../src/index.css";
 import { UserPlus, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { signUp } from "../utils/Supabase/Auth/signup";
 
 const SignUp: React.FC = () => {
+  const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,6 +15,15 @@ const SignUp: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        navigate("/verify-email?type=signup");
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [success, navigate]);
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 

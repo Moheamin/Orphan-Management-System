@@ -18,21 +18,29 @@ export async function deleteSponsor(sponsorId: string) {
     .filter(Boolean) as string[];
 
   // 2. Log each active link to sponsorship table as historical record
+  // 2. Log each active link to sponsorship table as historical record
+  // 2. Log each active link to sponsorship table as historical record
+  // Step 2 in your deleteSponsor function
   for (const sib of siblings || []) {
     if (sib.orphan_id) {
-      const { error: histErr } = await client.from("sponsorship").insert({
-        sponsor_id: sib.id,
-        orphan_id: sib.orphan_id,
-        sponsorship_type: sib.sponsorship_type || "كفالة جزئية",
-        start_date: sib.created_at
-          ? sib.created_at.split("T")[0]
-          : sib.join_date,
-        status: "متوقف",
-      });
+      const { error: histErr } = await client.from("sponsorship").upsert(
+        {
+          sponsor_id: sib.id,
+          orphan_id: sib.orphan_id,
+          sponsorship_type: sib.sponsorship_type || "كفالة جزئية",
+          start_date: sib.created_at
+            ? sib.created_at.split("T")[0]
+            : sib.join_date,
+          status: "متوقف",
+        },
+        {
+          // Match the constraint defined in your SQL schema exactly
+          onConflict: "sponsor_id, orphan_id, sponsorship_type",
+        },
+      );
       if (histErr) throw histErr;
     }
   }
-
   // 3. Soft-delete ALL sibling sponsor rows
   const { data, error } = await client
     .from("sponsor")

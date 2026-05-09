@@ -157,7 +157,7 @@ const FilterSelect = ({
     <div ref={containerRef} className={`relative min-w-[140px] ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between gap-2 rounded-xl border border-[var(--borderColor)] bg-[var(--fillColor)] px-3.5 py-2.5 md:py-2 text-sm text-[var(--textColor)] hover:border-[var(--primeColor)]/50 transition-all duration-200"
+        className="flex w-full items-center justify-between gap-2 rounded-xl border border-[var(--borderColor)] bg-[var(--fillColor)] px-3.5 py-3 sm:py-2.5 md:py-2 text-sm text-[var(--textColor)] hover:border-[var(--primeColor)]/50 transition-all duration-200"
       >
         <div className="flex items-center gap-2">
           <Filter size={15} className="text-[var(--textMuted)]" />
@@ -230,7 +230,7 @@ const SearchInput = ({
           onSearch?.(e.target.value);
         }}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-[var(--borderColor)] bg-[var(--fillColor)] px-9 py-2.5 md:py-2 text-xs text-[var(--textColor)] outline-none focus:border-[var(--primeColor)] focus:ring-2 focus:ring-[var(--primeColor)]/20 transition-all duration-200 placeholder:text-[var(--textMuted)]"
+        className="w-full rounded-xl border border-[var(--borderColor)] bg-[var(--fillColor)] px-9 py-3 sm:py-2.5 md:py-2 text-xs text-[var(--textColor)] outline-none focus:border-[var(--primeColor)] focus:ring-2 focus:ring-[var(--primeColor)]/20 transition-all duration-200 placeholder:text-[var(--textMuted)]"
       />
       {searchQuery && (
         <button
@@ -261,7 +261,7 @@ const AddButton = ({ label, onClick, className = "" }: AddButtonProps) => {
 };
 
 const Table = ({ children, className = "" }: TableProps) => (
-  <div className="w-full overflow-x-auto rounded-xl border border-[var(--borderColor)]/50 custom-scrollbar">
+  <div className="w-full max-w-7xl mx-auto overflow-x-auto rounded-xl border border-[var(--borderColor)]/50 custom-scrollbar">
     <table className={`min-w-full text-sm text-right ${className}`}>
       {children}
     </table>
