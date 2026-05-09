@@ -7,7 +7,6 @@ import {
   TrendingUp,
   ArrowDownRight,
   ArrowUpRight,
-  Banknote,
   StickyNote,
 } from "lucide-react";
 
@@ -65,12 +64,6 @@ function OrphanageFundsContent() {
   }, [records, searchQuery, filterValue]);
 
   const totalFunds = records.reduce((s, f) => s + (f.amount || 0), 0);
-  const surplusTotal = records
-    .filter((f) => f.transaction_type === "surplus")
-    .reduce((s, f) => s + (f.amount || 0), 0);
-  const donationTotal = records
-    .filter((f) => f.transaction_type === "donation")
-    .reduce((s, f) => s + (f.amount || 0), 0);
 
   const getTypeLabel = (type: string) => {
     switch (type) {

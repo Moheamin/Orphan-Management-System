@@ -1,13 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  X,
-  CreditCard,
-  User,
-  Calendar,
-  AlertCircle,
-  CheckCircle2,
-  Loader2,
-} from "lucide-react";
+import { X, User, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import {
   useCreateSponsorPayment,
   useUpdateSponsorPayment,
