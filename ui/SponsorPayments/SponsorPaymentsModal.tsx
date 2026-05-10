@@ -56,13 +56,20 @@ export default function SponsorPaymentModal({
   const expected = parseFloat(expectedAmount) || 0;
   const diff = paid - expected;
 
-  // Preview what the status will be after saving (mirrors DB trigger logic)
-  const previewStatus = (() => {
+  // Calculate status in real-time (mirrors DB trigger logic)
+  const calculatedStatus = (() => {
     if (paid === 0) return "قيد الانتظار";
     if (paid === expected) return "مدفوع بالكامل";
     if (paid > expected) return "فائض";
     return "مدفوع جزئيا";
   })();
+
+  // Use calculated status if amounts changed, otherwise show original
+  const displayStatus =
+    parseFloat(paidAmount) !== editData.paid_amount ||
+    parseFloat(expectedAmount) !== editData.expected_amount
+      ? calculatedStatus
+      : editData.status;
 
   const getStatusStyle = (s: string) => {
     switch (s) {
@@ -141,9 +148,9 @@ export default function SponsorPaymentModal({
           <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-[var(--fillColor)] border border-[var(--borderColor)]">
             <div className="flex items-center gap-2 text-xs text-[var(--textMuted)]">
               <span
-                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${getStatusStyle(editData.status)}`}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all ${getStatusStyle(displayStatus)}`}
               >
-                {editData.status}
+                {displayStatus}
               </span>
             </div>
             <div className="flex flex-col items-end gap-0.5">
@@ -222,9 +229,9 @@ export default function SponsorPaymentModal({
             {/* Status preview */}
             <div className="flex items-center justify-between">
               <span
-                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${getStatusStyle(previewStatus)}`}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all ${getStatusStyle(calculatedStatus)}`}
               >
-                {previewStatus}
+                {calculatedStatus}
               </span>
               <span className="text-xs text-[var(--textMuted)]">
                 الحالة بعد الحفظ

@@ -152,6 +152,34 @@ function Overview() {
 
   const COLORS = ["#3b7e5c", "#6fcf97", "#b2f2bb"];
 
+  const renderCustomLabel = ({
+    name,
+    value,
+    cx,
+    cy,
+    midAngle,
+    outerRadius,
+  }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius + 80;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="#3b7e5c"
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+        className="text-sm font-semibold"
+        fontSize="14"
+      >
+        {`${name}: ${value}`}
+      </text>
+    );
+  };
+
   const loading =
     orphansLoading ||
     sponsorsLoading ||
@@ -234,7 +262,7 @@ function Overview() {
                     cx="50%"
                     cy="50%"
                     outerRadius={90}
-                    label={({ name, value }) => `${name}: ${value}`}
+                    label={renderCustomLabel}
                   >
                     {sponsorshipTypes.map((_entry, idx) => (
                       <Cell

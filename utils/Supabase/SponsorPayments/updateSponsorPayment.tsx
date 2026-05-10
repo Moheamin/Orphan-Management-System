@@ -17,14 +17,17 @@ type CreatePayload = {
 
 /**
  * Create a new sponsor_payment record.
- * The DB trigger `automate_sponsor_payment_details` handles:
- *   - status (based on paid vs expected)
- *   - payment_date (set automatically when fully paid)
- *   - remaining_debt / extra_charity (GENERATED columns)
- * The trigger `handle_payment_surplus` routes surplus → orphanage_funds.
+ * Manually calculates and sets status (since DB trigger may not exist).
  */
 export async function createSponsorPayment(payload: CreatePayload) {
-  // Step 1: insert (trigger fires)
+  // Calculate status and payment_date based on amounts
+  const newStatus = calculateStatus(
+    payload.paid_amount,
+    payload.expected_amount,
+  );
+  const paymentDate = payload.paid_amount > 0 ? new Date().toISOString() : null;
+
+  // Insert with calculated status
   const { data, error } = await supabase()
     .from("sponsor_payment")
     .insert({
@@ -32,6 +35,8 @@ export async function createSponsorPayment(payload: CreatePayload) {
       payment_target_month: payload.payment_target_month,
       expected_amount: payload.expected_amount,
       paid_amount: payload.paid_amount,
+      status: newStatus,
+      payment_date: paymentDate,
       note: payload.note || "",
     })
     .select()
@@ -39,49 +44,51 @@ export async function createSponsorPayment(payload: CreatePayload) {
 
   if (error) throw error;
 
-  // Step 2: set payment_date after trigger has run
-  if (payload.paid_amount > 0) {
-    const { error: dateError } = await supabase()
-      .from("sponsor_payment")
-      .update({ payment_date: new Date().toISOString() })
-      .eq("id", data.id);
-
-    if (dateError) throw dateError;
-  }
-
   return data;
 }
 
 /**
+ * Calculate status based on paid vs expected amounts
+ */
+function calculateStatus(paidAmount: number, expectedAmount: number): string {
+  if (paidAmount === 0) return "قيد الانتظار";
+  if (paidAmount === expectedAmount) return "مدفوع بالكامل";
+  if (paidAmount > expectedAmount) return "فائض";
+  return "مدفوع جزئيا";
+}
+
+/**
  * Update an existing sponsor_payment record.
- * Only send paid_amount and expected_amount — the DB trigger does the rest:
- *   - Auto-recalculates status
- *   - Sets/clears payment_date
- *   - Updates remaining_debt and extra_charity (GENERATED)
- *   - Routes surplus to orphanage_funds if paid > expected
+ * Manually calculates and updates status (since DB trigger may not exist).
  */
 export async function updateSponsorPayment(payload: UpdatePayload) {
   const { id, paid_amount, expected_amount } = payload;
 
-  // Step 1: update amounts — DB trigger fires here and may reset payment_date to NULL
-  const { data, error } = await supabase()
-    .from("sponsor_payment")
-    .update({ paid_amount, expected_amount })
-    .eq("id", id)
-    .select()
-    .single();
+  // Calculate the new status based on amounts
+  const newStatus = calculateStatus(paid_amount, expected_amount);
+  const paymentDate = paid_amount > 0 ? new Date().toISOString() : null;
 
-  if (error) throw error;
-
-  // Step 2: force payment_date AFTER the trigger has already run
-  const { error: dateError } = await supabase()
+  // Update both amounts AND status together
+  const { error } = await supabase()
     .from("sponsor_payment")
     .update({
-      payment_date: paid_amount > 0 ? new Date().toISOString() : null,
+      paid_amount,
+      expected_amount,
+      status: newStatus,
+      payment_date: paymentDate,
     })
     .eq("id", id);
 
-  if (dateError) throw dateError;
+  if (error) throw error;
+
+  // REFETCH the complete updated record to confirm all changes
+  const { data, error: fetchError } = await supabase()
+    .from("sponsor_payment")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (fetchError) throw fetchError;
 
   return data;
 }
