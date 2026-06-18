@@ -158,27 +158,26 @@ function Overview() {
     cx,
     cy,
     midAngle,
-    innerRadius,
     outerRadius,
   }: any) => {
     const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-    const total = sponsorshipTypes.reduce((s: number, d: any) => s + d.value, 0);
-    const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+    // Place label 48px beyond the outer edge — fits inside 360px tall container
+    const labelR = outerRadius + 48;
+    const x = cx + labelR * Math.cos(-midAngle * RADIAN);
+    const y = cy + labelR * Math.sin(-midAngle * RADIAN);
 
     return (
       <text
         x={x}
         y={y}
-        fill="#fff"
-        textAnchor="middle"
+        fill="#5ea375"
+        textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
-        fontSize="12"
+        fontSize="13"
         fontWeight="bold"
+        direction="rtl"
       >
-        {pct > 8 ? `${pct}%` : ""}
+        {`${name}: ${value}`}
       </text>
     );
   };
@@ -256,7 +255,7 @@ function Overview() {
               <h2 className="text-sm font-bold mb-3 text-[var(--primeColor)] text-right">
                 توزيع الكفالات
               </h2>
-              <ResponsiveContainer width="100%" height={chartHeight}>
+              <ResponsiveContainer width="100%" height={420}>
                 <PieChart>
                   <Pie
                     data={sponsorshipTypes}
@@ -264,9 +263,9 @@ function Overview() {
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={90}
+                    outerRadius={100}
                     label={renderCustomLabel}
-                    labelLine={false}
+                    labelLine={{ stroke: "#5ea375", strokeWidth: 1 }}
                   >
                     {sponsorshipTypes.map((_entry, idx) => (
                       <Cell
