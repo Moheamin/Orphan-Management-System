@@ -18,6 +18,7 @@ export function useDeleteSponsors() {
       queryClient.invalidateQueries({ queryKey: ["orphans"] });
       queryClient.invalidateQueries({ queryKey: ["orphans", "lookup"] });
       queryClient.invalidateQueries({ queryKey: ["sponsorPayments"] });
+      queryClient.invalidateQueries({ queryKey: ["orphanReceives"] });
     },
     onError: (error) => {
       console.error("❌ Delete sponsor error:", error);

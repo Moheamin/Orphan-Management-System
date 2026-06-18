@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { StickyNote } from "lucide-react";
 import { DataTable } from "../../components/CompoundTable";
-import LoadingSpinner from "../../components/LoadingSpinner";
 import { useGetSponsorships } from "../../utils/ReactQuerry/Sponsorships/useGetSponsorships";
 import { useUpdateSponsorships } from "../../utils/ReactQuerry/Sponsorships/useUpdateSponsorships";
 
@@ -88,7 +87,7 @@ function SponsorshipsTableContent() {
     return result;
   }, [sponsorships, searchQuery, filterValue]);
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <DataTable.Loading />;
   if (isError) return <DataTable.Error message="حدث خطأ عند تحميل البيانات" />;
 
   return (

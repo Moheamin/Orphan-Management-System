@@ -1,26 +1,28 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import { useAuthUser, canAccess } from "../utils/Supabase/Auth/useAuthUser";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useRealtimeSync } from "../utils/Supabase/useRealtimeSync";
 import { useGlobalSettings } from "../utils/Supabase/useGlobalSettings";
 
-import Orphans from "../pages/Orphans";
-import Sponsors from "../pages/Sponsors";
-import Overview from "../pages/Overview";
-import Settings from "../pages/Settings";
-import SponserShips from "../pages/SponserShips";
-import SponsorPayments from "../pages/Salaries";
-import SignIn from "../pages/SignIn";
-import SignUp from "../pages/SignUp";
-import Users from "../pages/Users";
-import OrphanReceives from "../pages/OrphanReceives";
-import OrphanageFunds from "../pages/OrphanageFunds";
+const Orphans = lazy(() => import("../pages/Orphans"));
+const Sponsors = lazy(() => import("../pages/Sponsors"));
+const Overview = lazy(() => import("../pages/Overview"));
+const Settings = lazy(() => import("../pages/Settings"));
+const SponserShips = lazy(() => import("../pages/SponserShips"));
+const SponsorPayments = lazy(() => import("../pages/Salaries"));
+const SignIn = lazy(() => import("../pages/SignIn"));
+const SignUp = lazy(() => import("../pages/SignUp"));
+const Users = lazy(() => import("../pages/Users"));
+const OrphanReceives = lazy(() => import("../pages/OrphanReceives"));
+const OrphanageFunds = lazy(() => import("../pages/OrphanageFunds"));
+const ResetPassword = lazy(() => import("../pages/ResetPassword"));
+const VerifyEmail = lazy(() => import("../pages/VerifyEmail"));
+
 import Header from "../ui/Header";
 import Navbar from "../ui/Navbar";
 import { useState } from "react";
 import { GlobalToaster } from "../utils/toast";
-import ResetPassword from "../pages/ResetPassword";
-import VerifyEmail from "../pages/VerifyEmail";
 
 function ProtectedRoute({
   children,
@@ -91,12 +93,14 @@ function App() {
     return (
       <>
         <GlobalToaster />
-        <Routes>
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-        </Routes>
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+          </Routes>
+        </Suspense>
       </>
     );
   }
@@ -118,6 +122,7 @@ function App() {
       <GlobalToaster />
       <Header isOpen={isOpen} setIsOpen={setIsOpen} />
       <main className="page-enter">
+        <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           <Route path="/" element={<Navigate to="/overview" replace />} />
           <Route
@@ -196,6 +201,7 @@ function App() {
           <Route path="/signup" element={<Navigate to="/overview" replace />} />
           <Route path="*" element={<Navigate to="/overview" replace />} />
         </Routes>
+        </Suspense>
       </main>
       <Navbar isOpen={isOpen} setIsOpen={setIsOpen} />
     </>

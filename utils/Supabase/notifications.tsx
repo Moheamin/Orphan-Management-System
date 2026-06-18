@@ -1,38 +1,16 @@
 import { supabase } from "./supabase";
 
 /**
- * Send a notification email via the Supabase Edge Function "send-email".
+ * Deployment steps for email notifications:
  *
- * Deploy the following Edge Function in your Supabase project:
- *
- *   supabase functions new send-email
- *
- * Then paste this into supabase/functions/send-email/index.ts:
- *
- * ```ts
- * import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
- *
- * const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
- *
- * serve(async (req) => {
- *   const { to, subject, html } = await req.json();
- *   const res = await fetch("https://api.resend.com/emails", {
- *     method: "POST",
- *     headers: {
- *       "Content-Type": "application/json",
- *       Authorization: `Bearer ${RESEND_API_KEY}`,
- *     },
- *     body: JSON.stringify({ from: "نظام الأيتام <noreply@yourdomain.com>", to, subject, html }),
- *   });
- *   const data = await res.json();
- *   return new Response(JSON.stringify(data), {
- *     headers: { "Content-Type": "application/json" },
- *     status: res.ok ? 200 : 400,
- *   });
- * });
- * ```
- *
- * Set the secret: supabase secrets set RESEND_API_KEY=re_xxxxx
+ * 1. Install Supabase CLI: https://supabase.com/docs/guides/cli
+ * 2. Login: supabase login
+ * 3. Link project: supabase link --project-ref YOUR_PROJECT_REF
+ * 4. Deploy function: supabase functions deploy send-email
+ * 5. Set secret: supabase secrets set RESEND_API_KEY=re_YOUR_KEY
+ * 6. Get a free Resend API key at: https://resend.com
+ * 7. Update "from" address in supabase/functions/send-email/index.ts
+ *    to use your verified Resend domain.
  */
 export async function sendNotificationEmail({
   to,
@@ -46,7 +24,17 @@ export async function sendNotificationEmail({
   const { data, error } = await supabase().functions.invoke("send-email", {
     body: { to, subject, html: body },
   });
-  if (error) throw error;
+
+  if (error) {
+    const msg = error.message ?? String(error);
+    if (msg.includes("not found") || msg.includes("404")) {
+      throw new Error(
+        "Edge Function غير مُنشأة بعد. اتبع الخطوات: supabase functions deploy send-email ثم supabase secrets set RESEND_API_KEY=re_xxxx",
+      );
+    }
+    throw error;
+  }
+
   return data;
 }
 

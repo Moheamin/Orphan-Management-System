@@ -91,11 +91,12 @@ function Settings() {
     setSendingTest(true);
     try {
       await sendTestEmail(email.trim());
-      toast.success("تم إرسال بريد الاختبار بنجاح");
-    } catch {
-      toast.error(
-        "فشل إرسال البريد — تحقق من إعداد Edge Function (send-email) في Supabase",
-      );
+      toast.success("تم إرسال بريد الاختبار بنجاح ✓");
+    } catch (err: any) {
+      const msg: string = err?.message ?? String(err);
+      toast.error(msg.length < 120 ? msg : "فشل إرسال البريد — تحقق من إعداد Edge Function في Supabase", {
+        duration: 6000,
+      });
     } finally {
       setSendingTest(false);
     }

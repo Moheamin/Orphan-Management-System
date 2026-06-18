@@ -158,24 +158,27 @@ function Overview() {
     cx,
     cy,
     midAngle,
+    innerRadius,
     outerRadius,
   }: any) => {
     const RADIAN = Math.PI / 180;
-    const radius = outerRadius + 80;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    const total = sponsorshipTypes.reduce((s: number, d: any) => s + d.value, 0);
+    const pct = total > 0 ? Math.round((value / total) * 100) : 0;
 
     return (
       <text
         x={x}
         y={y}
-        fill="#3b7e5c"
-        textAnchor={x > cx ? "start" : "end"}
+        fill="#fff"
+        textAnchor="middle"
         dominantBaseline="central"
-        className="text-sm font-semibold"
-        fontSize="14"
+        fontSize="12"
+        fontWeight="bold"
       >
-        {`${name}: ${value}`}
+        {pct > 8 ? `${pct}%` : ""}
       </text>
     );
   };
@@ -263,6 +266,7 @@ function Overview() {
                     cy="50%"
                     outerRadius={90}
                     label={renderCustomLabel}
+                    labelLine={false}
                   >
                     {sponsorshipTypes.map((_entry, idx) => (
                       <Cell

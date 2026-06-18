@@ -8,15 +8,15 @@ export function useDeleteOrphans() {
   const { isPending, mutate: deleteOrphanMutate } = useMutation({
     mutationFn: deleteOrphan,
     onSuccess: () => {
-      toast.success("Orphan Deleted successfully!");
-
-      queryClient.invalidateQueries({
-        queryKey: ["orphans"],
-        exact: false, // allow partial match
-      });
+      toast.success("تم حذف اليتيم بنجاح!");
+      queryClient.invalidateQueries({ queryKey: ["orphans"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["sponsors"] });
+      queryClient.invalidateQueries({ queryKey: ["sponsorStats"] });
+      queryClient.invalidateQueries({ queryKey: ["sponsorships"] });
+      queryClient.invalidateQueries({ queryKey: ["orphanReceives"] });
     },
     onError: (error) => {
-      toast.error("Faild to upload! Please check your connection.");
+      toast.error("فشل في الحذف! يرجى التحقق من الاتصال.");
       console.error(error);
     },
   });

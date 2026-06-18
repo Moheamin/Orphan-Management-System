@@ -29,16 +29,29 @@ export async function fetchOrphanReceives() {
     // Attach sponsor payment data if a sponsor exists on this row
     if (row.sponsor_id) {
       const orphan = orphanMap.get(row.orphan_id);
+      const paidAmt = Number(row.sponsor_paid_amount ?? 0);
+      const debtAmt = Number(row.sponsor_remaining_debt ?? 0);
+      // Per-sponsor expected = what they paid + what they still owe
+      const sponsorExpected = paidAmt + debtAmt;
+      // Derive per-payment status from amounts
+      let payStatus: string;
+      if (debtAmt <= 0) {
+        payStatus = paidAmt > sponsorExpected ? "فائض" : "مدفوع";
+      } else if (paidAmt > 0) {
+        payStatus = "مدفوع جزئياً";
+      } else {
+        payStatus = "قيد الانتظار";
+      }
       orphan.sponsor_payments.push({
         id: row.sponsor_id,
         sponsor_id: row.sponsor_id,
         sponsor_name: row.sponsor_name ?? "—",
-        sponsorship_type: row.sponsor_status ?? "—",
-        expected_amount: Number(row.monthly_need ?? 0),
-        paid_amount: Number(row.sponsor_paid_amount ?? 0),
-        remaining_debt: Number(row.sponsor_remaining_debt ?? 0),
+        sponsorship_type: row.sponsorship_type ?? row.sponsor_status ?? "—",
+        expected_amount: sponsorExpected,
+        paid_amount: paidAmt,
+        remaining_debt: debtAmt,
         extra_charity: 0,
-        status: row.financial_status,
+        status: payStatus,
         payment_date: null,
         payment_month: null,
       });
@@ -80,7 +93,7 @@ export async function fetchOrphanReceives() {
       totalSponsorPaid + orphanage_base_share + gap_covered_from_surplus;
 
     let funding_status = "Covered";
-    if (uncovered_gap > 0) funding_status = "Deficit";
+    if (uncovered_gap > 0) funding_status = "Orphanage Only";
     else if (gap_covered_from_surplus > 0) funding_status = "Partially Funded";
 
     return {
